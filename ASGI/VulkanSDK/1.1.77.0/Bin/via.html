@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<HTML lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<HEAD>
+    <TITLE>LunarG VIA</TITLE>
+    <META charset="UTF-8">
+    <style media="screen" type="text/css">
+        html {
+            background-color: #0b1e48;
+            background-image: url("file:///H:/VulkanSDK/1.1.77.0/Bin/images/lunarg_via.png"), url("https://vulkan.lunarg.com/img/lunarg_via.png"), url("file:///H:/VulkanSDK/1.1.77.0/Bin/images/bg-starfield.jpg"), url("https://vulkan.lunarg.com/img/bg-starfield.jpg");
+            background-position: center top, center top, center, center;
+            -webkit-background-size: auto, auto, cover, cover;
+            -moz-background-size: auto, auto, cover, cover;
+            -o-background-size: auto, auto, cover, cover;
+            background-size: auto, auto, cover, cover;
+            background-attachment: scroll, scroll, fixed, fixed;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+        }
+        h1.section {
+            font-family: sans-serif;
+            font-size: 35px;
+            color: #FFFFFF;
+        }
+        h1.version {
+            font-family: sans-serif;
+            font-size: 25px;
+            color: #FFFFFF;
+        }
+        h2.note {
+            font-family: sans-serif;
+            font-size: 22px;
+            color: #FFFFFF;
+        }
+        table {
+            min-width: 600px;
+            width: 70%;
+            border-collapse: collapse;
+            border-color: grey;
+            font-family: sans-serif;
+        }
+        td.header {
+            padding: 18px;
+            border: 1px solid #ccc;
+            font-size: 18px;
+            color: #fff;
+        }
+        td.odd {
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            color: rgb(255, 255, 255);
+        }
+        td.even {
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            color: rgb(220, 220, 220);
+        }
+        tr.header {
+            background-color: rgba(255,255,255,0.5);
+        }
+        tr.odd {
+            background-color: rgba(0,0,0,0.6);
+        }
+        tr.even {
+            background-color: rgba(0,0,0,0.7);
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $( document ).ready(function() {
+            $('table tr:not(.header)').hide();
+            $('.header').click(function() {
+                $(this).nextUntil('tr.header').slideToggle(300);
+            });
+        });
+    </script>
+</HEAD>
+
+<BODY>
+
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <BR />
+    <H1 class="version"><center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Version 1.2</center></h1>
+    <BR />
+<center><h2 class="note">< NOTE: Click on section name to expand table ></h2></center>
+    <BR />
+    <H1 class="section"><center>System Info</center></h1>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Environment</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Windows</td>
+            <td class="odd">Windows 10 Pro</td>
+            <td class="odd"> 64-bit</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Build</td>
+            <td class="even">17134</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Branch</td>
+            <td class="odd">rs4_release</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">System Root</td>
+            <td class="even">C:\WINDOWS</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Program Data</td>
+            <td class="odd">C:\ProgramData</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Program Files</td>
+            <td class="even">C:\Program Files</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Program Files (x86)</td>
+            <td class="odd">C:\Program Files (x86)</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">TEMP</td>
+            <td class="even">C:\Users\maste\AppData\Local\Temp</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">TMP</td>
+            <td class="odd">C:\Users\maste\AppData\Local\Temp</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Hardware</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">CPUs</td>
+            <td class="odd">Number of Logical Cores</td>
+            <td class="odd">4</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Type</td>
+            <td class="even">x86_64</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Memory</td>
+            <td class="odd">Physical</td>
+            <td class="odd">7 GB</td>
+        </tr>
+        <tr class="even">
+            <td class="even">Disk Space</td>
+            <td class="even">Total</td>
+            <td class="even">199 GB</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Free</td>
+            <td class="odd">97 GB</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Free Perc</td>
+            <td class="even">48.73%</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="2" class="header">Executable</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Exe Directory</td>
+            <td class="odd">H:/VulkanSDK/1.1.77.0/Bin</td>
+        </tr>
+        <tr class="even">
+            <td class="even">Current Directory</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Vulkan API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even">Byte Format</td>
+            <td class="even">64-bit</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="4" class="header">Vulkan Driver Info</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Drivers in Registry</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">PCI\VEN_10DE&DEV_1391&SUBSYS_228D103C&REV_A2\4&75f39ef&0&00E4</td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">C:\WINDOWS\System32\DriverStore\FileRepository\nvhmi.inf_amd64_046bbeb4276927c6\nv-vk64.json</td>
+            <td class="odd">Enabled</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.0.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.70</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\nvoglv64.dll</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library File Version</td>
+            <td class="odd">24.21.13.9793</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Vulkan Runtimes</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Runtimes In Registry</td>
+            <td class="odd">SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">Runtimes in System Folder</td>
+            <td class="even">C:\WINDOWS\system32\</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">DLL 0</td>
+            <td class="odd">vulkan-1-999-0-0-0.dll</td>
+            <td class="odd">Version 1.1.77.0</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">DLL 1</td>
+            <td class="even">vulkan-1.dll</td>
+            <td class="even">Version 1.1.77.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Runtime Used by App</td>
+            <td class="odd">C:\Windows\System32\vulkan-1.dll</td>
+            <td class="odd">1.1.77.0</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="4" class="header">LunarG Vulkan SDKs</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">SDKs Found In Registry</td>
+            <td class="odd">SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">VK_SDK_PATH</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">SDK Explicit Layers</td>
+            <td class="even">SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VulkanSDK1.1.77.0</td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Explicit Layers in Registry</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers</td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_api_dump.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_LUNARG_api_dump</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">LunarG debug layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.0.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_api_dump.dll</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[1]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_assistant_layer.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_LUNARG_assistant_layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">LunarG Validation Factory Layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.1.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_assistant_layer.dll</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Device Extensions</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Instance Extensions</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_report</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[2]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_core_validation.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_LUNARG_core_validation</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">LunarG Validation Layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.1.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_core_validation.dll</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Device Extensions</td>
+            <td class="odd">2</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_validation_cache</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Instance Extensions</td>
+            <td class="even">1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_report</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[3]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_device_simulation.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_device_simulation</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">LunarG device simulation layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.1.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\VkLayer_device_simulation.dll</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[4]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_monitor.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_monitor</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">Execution Monitoring Layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.0.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\VkLayer_monitor.dll</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[5]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_object_tracker.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_object_tracker</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">LunarG Validation Layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.1.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\VkLayer_object_tracker.dll</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Device Extensions</td>
+            <td class="even">1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Instance Extensions</td>
+            <td class="even">1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_report</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[6]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_parameter_validation.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_parameter_validation</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">LunarG Validation Layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.1.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\VkLayer_parameter_validation.dll</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Device Extensions</td>
+            <td class="even">1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Instance Extensions</td>
+            <td class="even">1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_report</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[7]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_screenshot.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_screenshot</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">LunarG image capture layer</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.0.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\VkLayer_screenshot.dll</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[8]</td>
+            <td class="even">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_standard_validation.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_LUNARG_standard_validation</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">LunarG Standard Validation</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.1.77</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.1.1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Component Layers</td>
+            <td class="odd">5</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">VK_LAYER_GOOGLE_threading</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">VK_LAYER_LUNARG_parameter_validation</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">VK_LAYER_LUNARG_object_tracker</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">VK_LAYER_LUNARG_core_validation</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">VK_LAYER_GOOGLE_unique_objects</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[9]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_threading.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_GOOGLE_threading</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">Google Validation Layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.1.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_threading.dll</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Instance Extensions</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_report</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[10]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_unique_objects.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_GOOGLE_unique_objects</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">Google Validation Layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.1.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_unique_objects.dll</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[11]</td>
+            <td class="odd">H:\VulkanSDK\1.1.77.0\Bin\VkLayer_vktrace_layer.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_LUNARG_vktrace</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">Vktrace tracing library</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.77</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.0.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">.\VkLayer_vktrace_layer.dll</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="4" class="header">Implicit Layers</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">Implicit Layers in Registry</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers</td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">C:\Program Files (x86)\NVIDIA Corporation\Nsight Visual Studio Edition 5.4\Monitor\Common\VK_LAYER_NV_nsight.json</td>
+            <td class="odd">0x00000001</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Name</td>
+            <td class="even">VK_LAYER_NV_nsight</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Description</td>
+            <td class="odd">NVIDIA Nsight interception layer</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.0.13</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">JSON File Version</td>
+            <td class="odd">1.0.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Library Path</td>
+            <td class="even">Nvda.Graphics.Interception.dll</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Device Extensions</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Enabled State</td>
+            <td class="odd">DISABLED</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">Enable Env Var</td>
+            <td class="even">ENABLE_VK_LAYER_NV_nsight</td>
+            <td class="even">Not Defined</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">Disable Env Var</td>
+            <td class="odd">DISABLE_VK_LAYER_NV_nsight</td>
+            <td class="odd">Not Defined</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[1]</td>
+            <td class="even">C:\Program Files\RenderDoc\renderdoc.json</td>
+            <td class="even">0x00000001</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Name</td>
+            <td class="odd">VK_LAYER_RENDERDOC_Capture</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Description</td>
+            <td class="even">Debugging capture layer for RenderDoc</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">API Version</td>
+            <td class="odd">1.0.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">JSON File Version</td>
+            <td class="even">1.1.2</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Library Path</td>
+            <td class="odd">.\renderdoc.dll</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Layer File Version</td>
+            <td class="even">1.0.0.0</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Device Extensions</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">VK_EXT_debug_marker</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Enabled State</td>
+            <td class="odd">DISABLED</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">Enable Env Var</td>
+            <td class="even">ENABLE_VULKAN_RENDERDOC_CAPTURE</td>
+            <td class="even">Not Defined</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">Disable Env Var</td>
+            <td class="odd">DISABLE_VULKAN_RENDERDOC_CAPTURE_1_0</td>
+            <td class="odd">Not Defined</td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="4" class="header">Layer Settings File</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">VK_LAYER_SETTINGS_PATH</td>
+            <td class="odd">Not Defined</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">Settings in Registry</td>
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\Settings</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">No Settings Found</td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">HKEY_CURRENT_USER\SOFTWARE\Khronos\Vulkan\Settings</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">No Settings Found</td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+    </table>
+    <BR/>
+    <BR/>
+    <H1 class="section"><center>Vulkan API Calls</center></h1>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Instance</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkEnumerateInstanceVersion</td>
+            <td class="odd">Max Instance Version</td>
+            <td class="odd">1.1.0</td>
+        </tr>
+        <tr class="even">
+            <td class="even">vkEnumerateInstanceExtensionProperties</td>
+            <td class="even">12 extensions found</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_EXT_debug_report</td>
+            <td class="odd">Spec Vers 9</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[1]</td>
+            <td class="even">VK_EXT_display_surface_counter</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[2]</td>
+            <td class="odd">VK_KHR_get_physical_device_properties2</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[3]</td>
+            <td class="even">VK_KHR_get_surface_capabilities2</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[4]</td>
+            <td class="odd">VK_KHR_surface</td>
+            <td class="odd">Spec Vers 25</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[5]</td>
+            <td class="even">VK_KHR_win32_surface</td>
+            <td class="even">Spec Vers 6</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[6]</td>
+            <td class="odd">VK_KHR_device_group_creation</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[7]</td>
+            <td class="even">VK_KHR_external_fence_capabilities</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[8]</td>
+            <td class="odd">VK_KHR_external_memory_capabilities</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[9]</td>
+            <td class="even">VK_KHR_external_semaphore_capabilities</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td align="right" class="odd">[10]</td>
+            <td class="odd">VK_NV_external_memory_capabilities</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[11]</td>
+            <td class="even">VK_EXT_debug_utils</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkCreateInstance [1.0]</td>
+            <td class="odd">SUCCESSFUL</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even">vkCreateInstance [1.1]</td>
+            <td class="even">SUCCESSFUL</td>
+            <td class="even"></td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="4" class="header">Physical Devices</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkEnumeratePhysicalDevices [1.0]</td>
+            <td class="odd">1</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td align="right" class="even">[0]</td>
+            <td class="even">0x000001AF03FAC370</td>
+            <td class="even"></td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Vendor</td>
+            <td class="odd">Nvidia [0x10de]</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Device Name</td>
+            <td class="even">GeForce GTX 850M</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Device ID</td>
+            <td class="odd">0x1391</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Device Type</td>
+            <td class="even">Discrete GPU</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Driver Version</td>
+            <td class="odd">397.372.0</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">API Version</td>
+            <td class="even">1.1.70</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Queue Families</td>
+            <td class="odd">2</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">Queue Count</td>
+            <td class="even">16</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Queue Flags</td>
+            <td class="odd">GRAPHICS | COMPUTE | TRANSFER | SPARSE_BINDING</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Timestamp Valid Bits</td>
+            <td class="even">0x40</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Image Granularity</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">Width</td>
+            <td class="even">0x1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">Height</td>
+            <td class="odd">0x1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">Depth</td>
+            <td class="even">0x1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[1]</td>
+            <td class="odd">Queue Count</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Queue Flags</td>
+            <td class="even">TRANSFER</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Timestamp Valid Bits</td>
+            <td class="odd">0x40</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Image Granularity</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">Width</td>
+            <td class="odd">0x1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td align="right" class="even">Height</td>
+            <td class="even">0x1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td align="right" class="odd">Depth</td>
+            <td class="odd">0x1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Memory Heaps</td>
+            <td class="even">2</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">Property Flags</td>
+            <td class="odd">DEVICE_LOCAL</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Heap Size</td>
+            <td class="even">4252762112</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[1]</td>
+            <td class="odd">Property Flags</td>
+            <td class="odd">--NONE--</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even"></td>
+            <td class="even">Heap Size</td>
+            <td class="even">8520728576</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd">Memory Types</td>
+            <td class="odd">11</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[1]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[2]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[3]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[4]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[5]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[6]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">--NONE--</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[7]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">DEVICE_LOCAL</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[8]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">DEVICE_LOCAL</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">0</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[9]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">HOST_VISIBLE | HOST_COHERENT</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[10]</td>
+            <td class="even">Property Flags</td>
+            <td class="even">HOST_VISIBLE | HOST_COHERENT | HOST_CACHED</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td class="odd"></td>
+            <td class="odd">Heap Index</td>
+            <td class="odd">1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">Device Extensions</td>
+            <td class="even">40</td>
+            <td class="even"></td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[0]</td>
+            <td class="odd">VK_KHR_swapchain</td>
+            <td class="odd">Spec Vers 70</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[1]</td>
+            <td class="even">VK_KHR_16bit_storage</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[2]</td>
+            <td class="odd">VK_KHR_bind_memory2</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[3]</td>
+            <td class="even">VK_KHR_dedicated_allocation</td>
+            <td class="even">Spec Vers 3</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[4]</td>
+            <td class="odd">VK_KHR_descriptor_update_template</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[5]</td>
+            <td class="even">VK_KHR_device_group</td>
+            <td class="even">Spec Vers 3</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[6]</td>
+            <td class="odd">VK_KHR_get_memory_requirements2</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[7]</td>
+            <td class="even">VK_KHR_image_format_list</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[8]</td>
+            <td class="odd">VK_KHR_maintenance1</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[9]</td>
+            <td class="even">VK_KHR_maintenance2</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[10]</td>
+            <td class="odd">VK_KHR_maintenance3</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[11]</td>
+            <td class="even">VK_KHR_multiview</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[12]</td>
+            <td class="odd">VK_KHR_push_descriptor</td>
+            <td class="odd">Spec Vers 2</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[13]</td>
+            <td class="even">VK_KHR_relaxed_block_layout</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[14]</td>
+            <td class="odd">VK_KHR_sampler_mirror_clamp_to_edge</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[15]</td>
+            <td class="even">VK_KHR_sampler_ycbcr_conversion</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[16]</td>
+            <td class="odd">VK_KHR_shader_draw_parameters</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[17]</td>
+            <td class="even">VK_KHR_storage_buffer_storage_class</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[18]</td>
+            <td class="odd">VK_KHR_external_memory</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[19]</td>
+            <td class="even">VK_KHR_external_memory_win32</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[20]</td>
+            <td class="odd">VK_KHR_external_semaphore</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[21]</td>
+            <td class="even">VK_KHR_external_semaphore_win32</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[22]</td>
+            <td class="odd">VK_KHR_win32_keyed_mutex</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[23]</td>
+            <td class="even">VK_KHR_external_fence</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[24]</td>
+            <td class="odd">VK_KHR_external_fence_win32</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[25]</td>
+            <td class="even">VK_KHR_variable_pointers</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[26]</td>
+            <td class="odd">VK_KHX_device_group</td>
+            <td class="odd">Spec Vers 2</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[27]</td>
+            <td class="even">VK_KHX_multiview</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[28]</td>
+            <td class="odd">VK_EXT_blend_operation_advanced</td>
+            <td class="odd">Spec Vers 2</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[29]</td>
+            <td class="even">VK_EXT_depth_range_unrestricted</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[30]</td>
+            <td class="odd">VK_EXT_discard_rectangles</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[31]</td>
+            <td class="even">VK_EXT_shader_subgroup_ballot</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[32]</td>
+            <td class="odd">VK_EXT_shader_subgroup_vote</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[33]</td>
+            <td class="even">VK_NV_dedicated_allocation</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[34]</td>
+            <td class="odd">VK_NV_external_memory</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[35]</td>
+            <td class="even">VK_NV_external_memory_win32</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[36]</td>
+            <td class="odd">VK_NV_glsl_shader</td>
+            <td class="odd">Spec Vers 1</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[37]</td>
+            <td class="even">VK_NV_win32_keyed_mutex</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd"></td>
+            <td align="right" class="odd">[38]</td>
+            <td class="odd">VK_NVX_device_generated_commands</td>
+            <td class="odd">Spec Vers 3</td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[39]</td>
+            <td class="even">VK_NVX_multiview_per_view_attributes</td>
+            <td class="even">Spec Vers 1</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkEnumeratePhysicalDevices [1.1]</td>
+            <td class="odd">0</td>
+            <td class="odd"></td>
+            <td class="odd"></td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Logical Devices</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkCreateDevice [1.0]</td>
+            <td class="odd">1</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td class="even">[0]</td>
+            <td class="even">SUCCESSFUL</td>
+        </tr>
+        <tr class="odd">
+    </table>
+    <table align="center">
+        <tr class="header">
+            <td colspan="3" class="header">Cleanup</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkDestroyDevice [1.0]</td>
+            <td class="odd">1</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+            <td class="even"></td>
+            <td align="right" class="even">[0]</td>
+            <td class="even">SUCCESSFUL</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">vkDestroyInstance [1.0]</td>
+            <td class="odd">SUCCESSFUL</td>
+            <td class="odd"></td>
+        </tr>
+        <tr class="even">
+    </table>
+    <BR/>
+    <BR/>
+    <H1 class="section"><center>External Tests</center></h1>
+    <table align="center">
+        <tr class="header">
+            <td colspan="2" class="header">Cube</td>
+        </tr>
+        <tr class="odd">
+            <td class="odd">cube.exe --c 100</td>
+            <td class="odd">SUCCESSFUL</td>
+        </tr>
+        <tr class="even">
+            <td class="even">cube.exe --c 100 --validate</td>
+            <td class="even">SUCCESSFUL</td>
+        </tr>
+    </table>
+    <BR/>
+    <BR/>
+</BODY>
+
+</HTML>
