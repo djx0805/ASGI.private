@@ -37,29 +37,9 @@ namespace ASGI {
 
 	};
 
-	class Shader : public GPUResource {
+	class ShaderModule : public GPUResource {
 	public:
-		virtual ~Shader() {}
-	};
-
-	class VertexShader : public Shader {
-
-	};
-
-	class TessControlShader : public Shader {
-
-	};
-
-	class TessEvaluationShader : public Shader {
-		
-	};
-
-	class GeometryShader : public Shader {
-
-	};
-
-	class FragmentShader : public Shader {
-
+		virtual ~ShaderModule() {}
 	};
 
 	class GraphicsPipeline : public GPUResource {

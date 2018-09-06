@@ -10,13 +10,9 @@ namespace ASGI {
 
 		virtual bool Init(const char* device_name = nullptr) = 0;
 		//graphics pipeline
-		virtual VertexShader* CreateVertexShader() = 0;
-		virtual TessControlShader* CreateTessControlShader() = 0;
-		virtual TessEvaluationShader* CreateTessEvaluationShader() = 0;
-		virtual GeometryShader* CreateGeometryShader() = 0;
-		virtual FragmentShader* CreateFragmentShader() = 0;
-		virtual GraphicsPipeline* CreateGraphicsPipeline() = 0;
-		virtual Swapchain* CreateSwapchain(void* windowHandle, unsigned int sizeX, unsigned int sizeY, bool bIsFullscreen, GIFormat pixelFormat, Swapchain* oldSwapchain) = 0;
+		virtual ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info) = 0;
+		virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) = 0;
+		virtual Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info) = 0;
 		//render resource
 		virtual VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info) = 0;
 		virtual IndexBuffer* CreateIndexBuffer(const IndexBufferCreateInfo& create_info) = 0;
