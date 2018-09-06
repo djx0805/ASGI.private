@@ -6,12 +6,22 @@ namespace ASGI {
 		virtual ~GPUResource() {}
 	};
 
-	class VertexBuffer : public GPUResource {
+
+	class Buffer : public GPUResource {
+	public:
+			virtual ~Buffer() {};
+	};
+
+	class VertexBuffer : public Buffer {
 	public:
 
 	};
 
-	class IndexBuffer : public GPUResource {
+	class IndexBuffer : public Buffer {
+
+	};
+
+	class UniformBuffer : public Buffer {
 
 	};
 
@@ -24,6 +34,39 @@ namespace ASGI {
 	};
 
 	class CommandBuffer : public GPUResource {
+
+	};
+
+	class Shader : public GPUResource {
+	public:
+		virtual ~Shader() {}
+	};
+
+	class VertexShader : public Shader {
+
+	};
+
+	class TessControlShader : public Shader {
+
+	};
+
+	class TessEvaluationShader : public Shader {
+		
+	};
+
+	class GeometryShader : public Shader {
+
+	};
+
+	class FragmentShader : public Shader {
+
+	};
+
+	class GraphicsPipeline : public GPUResource {
+
+	};
+
+	class Swapchain : public GPUResource {
 
 	};
 }
