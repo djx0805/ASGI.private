@@ -21,6 +21,11 @@ namespace ASGI {
 		return false;
 	}
 
+
+	Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info) {
+		return pGI->CreateSwapchain(create_info);
+	}
+
 	VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info) {
 		return pGI->CreateVertexBuffer(create_info);
 	}

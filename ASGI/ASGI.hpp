@@ -19,8 +19,11 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
+#include <vector>
+#include "GPUResource.h"
+
 namespace ASGI {
-	extern ASGI_API bool GSupportParallelCommandBuffer = false;
+	extern ASGI_API bool GSupportParallelCommandBuffer;
 
 	enum Format {
 		FORMAT_UNDEFINED = 0,
@@ -317,7 +320,12 @@ namespace ASGI {
 	};
 
 	struct SwapchainCreateInfo {
-
+		void* windowHandle;
+		uint32_t sizeX;
+		uint32_t sizeY;
+		bool isFullScreen;
+		Format preferredPixelFormat;
+		bool vsync;
 	};
 
 	struct DescriptorSetLayout {
@@ -383,6 +391,9 @@ namespace ASGI {
 
 	};
 
+	struct UniformBufferCreateInfo {
+
+	};
 
 	struct CommandBufferCreateInfo {
 

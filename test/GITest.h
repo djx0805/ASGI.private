@@ -11,6 +11,19 @@ public:
 			return false;
 		}
 
+		ASGI::SwapchainCreateInfo swapchain_create_info = {
+			GetHWND(),
+			800,
+			600,
+			false,
+			ASGI::Format::FORMAT_B8G8R8A8_UNORM,
+			true
+		};
+		ASGI::Swapchain* pSwapchain = ASGI::CreateSwapchain(swapchain_create_info);
+		if (pSwapchain == nullptr) {
+			return false;
+		}
+
 		return true;
 	}
 

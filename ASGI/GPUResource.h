@@ -4,6 +4,8 @@ namespace ASGI {
 	class GPUResource {
 	public:
 		virtual ~GPUResource() {}
+	protected:
+		GPUResource(){}
 	};
 
 

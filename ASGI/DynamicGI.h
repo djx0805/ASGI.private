@@ -16,7 +16,7 @@ namespace ASGI {
 		//render resource
 		virtual VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info) = 0;
 		virtual IndexBuffer* CreateIndexBuffer(const IndexBufferCreateInfo& create_info) = 0;
-		virtual UniformBuffer* CreateUniformBuffer() = 0;
+		virtual UniformBuffer* CreateUniformBuffer(const UniformBufferCreateInfo& create_info) = 0;
 		virtual Texture2D* CreateTexture2D(const Texture2DCreateInfo& create_info) = 0;
 		//render command
 		virtual CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info) = 0;
