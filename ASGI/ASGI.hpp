@@ -6,6 +6,7 @@
 #define ASGI_API __declspec(dllimport)
 #endif
 
+
 #if defined(_MSC_VER) && (_MSC_VER < 1600)
 typedef signed   __int8  int8_t;
 typedef unsigned __int8  uint8_t;
@@ -288,6 +289,14 @@ namespace ASGI {
 		FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR = FORMAT_G16_B16R16_2PLANE_422_UNORM,
 		FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR = FORMAT_G16_B16_R16_3PLANE_444_UNORM
 	} ;
+	extern uint8_t GetFormatSize(Format format);
+
+	enum VertexFormat {
+		VF_Float1 = Format::FORMAT_R32_SFLOAT,
+		VF_Float2 = Format::FORMAT_R32G32_SFLOAT,
+		VF_Float3 = Format::FORMAT_R32G32B32_SFLOAT,
+		VF_Float4 = Format::FORMAT_R32G32B32A32_SFLOAT,
+	};
 
 	enum DescriptorType {
 		DESCRIPTOR_TYPE_SAMPLER = 0,
@@ -315,8 +324,9 @@ namespace ASGI {
 	//
 
 	struct ShaderModuleCreateInfo {
+		const char* path;
 		uint32_t codeSize;
-		unsigned char* pcode;
+		char* pcode;
 	};
 
 	struct SwapchainCreateInfo {
@@ -328,28 +338,23 @@ namespace ASGI {
 		bool vsync;
 	};
 
-	struct DescriptorSetLayout {
-		uint32_t bindingSlot;
-		DescriptorType descriptorType;
-		uint32_t descriptorCount;
-	};
-
-	struct PushConstantRange {
-		uint32_t offset;
-		uint32_t size;
-	};
-
-	struct PipelineLayout {
-		std::vector<DescriptorSetLayout> setLayouts;
-		std::vector<PushConstantRange> pushConstantRanges;
-	};
-
 	struct PipelineShaderStage {
-
+		ShaderModule* pVertexShader;
+		ShaderModule* pGeomteryShader;
+		ShaderModule* pTessControlShader;
+		ShaderModule* pTessEvaluationShader;
+		ShaderModule* pFragmentShader;
 	};
 
-	struct PipelineVertexInputState {
+	struct VertexInputItem {
+		uint8_t bindingNumber;
+		uint8_t offset;
+		VertexFormat format;
+		uint8_t location;
+	};
 
+	struct PipelineVertexDeclaration {
+		std::vector<VertexInputItem> vertexInputs;
 	};
 
 	struct PipelineInputAssemblyState {
@@ -374,13 +379,12 @@ namespace ASGI {
 
 	struct GraphicsPipelineCreateInfo {
 		PipelineShaderStage shaderStage;
-		PipelineVertexInputState vertexInputState;
+		PipelineVertexDeclaration vertexDeclaration;
 		PipelineInputAssemblyState inputAssemblyState;
 		PipelineRasterizationState rasterizationState;
 		PipelineMultisampleState multisampleState;
 		PipelineDepthStencilState depthStencilState;
 		PipelineColorBlendState colorBlendState;
-		PipelineLayout layout;
 	};
 
 	struct VertexBufferCreateInfo {

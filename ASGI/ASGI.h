@@ -10,6 +10,8 @@ namespace ASGI {
 	};
 
 	ASGI_API bool Init(GIType driver, const char* device_name = nullptr);
+	ASGI_API ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info);
+	ASGI_API GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info);
 	ASGI_API Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info);
 	ASGI_API VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info);
 	ASGI_API IndexBuffer* CreateIndexBuffer(const IndexBufferCreateInfo& create_info);

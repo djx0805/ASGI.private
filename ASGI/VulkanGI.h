@@ -45,6 +45,6 @@ namespace ASGI {
 		VkPhysicalDeviceProperties mVkDeviceProperties;
 		VkDevice mVkLogicDevice;
 		VkQueue mVkGraphicsQueue;
-		VkSwapchain* mSwapchain = nullptr;
+		VKSwapchain* mSwapchain = nullptr;
 	};
 }

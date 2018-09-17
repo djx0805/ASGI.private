@@ -19,6 +19,12 @@
     <Filter Include="ASGI">
       <UniqueIdentifier>{7616917a-9fee-444a-b38c-acef480dae23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="VkGLSL">
+      <UniqueIdentifier>{d70ca4ef-3d8a-4051-85c2-03828d8a563f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spirv-cross">
+      <UniqueIdentifier>{91f65b64-ba42-4c52-857c-2b7dee22ecd4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -42,6 +48,42 @@
     <ClInclude Include="ASGI.hpp">
       <Filter>ASGI</Filter>
     </ClInclude>
+    <ClInclude Include="VkGLSL.hpp">
+      <Filter>VkGLSL</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\GLSL.std.450.h">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cfg.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_common.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cpp.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cross.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cross_util.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_glsl.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_hlsl.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_msl.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp">
+      <Filter>spirv-cross</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanGI.cpp">
@@ -49,6 +91,33 @@
     </ClCompile>
     <ClCompile Include="ASGI.cpp">
       <Filter>ASGI</Filter>
+    </ClCompile>
+    <ClCompile Include="VkGLSL.cpp">
+      <Filter>VkGLSL</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cfg.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cpp.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cross.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cross_util.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_glsl.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_hlsl.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_msl.cpp">
+      <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp">
+      <Filter>spirv-cross</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

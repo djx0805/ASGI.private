@@ -43,7 +43,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -76,6 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\debug</OutDir>
+    <IncludePath>third_lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -102,7 +103,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;ASGI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;ASGI_EXPORTS;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeaderFile />
     </ClCompile>
@@ -153,6 +154,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DynamicGI.h" />
+    <ClInclude Include="third_lib\SPIRV-Cross\GLSL.std.450.h" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cfg.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_common.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cpp.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cross.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_cross_util.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_glsl.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_hlsl.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_msl.hpp" />
+    <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp" />
+    <ClInclude Include="VkGLSL.hpp" />
     <ClInclude Include="GPUResource.h" />
     <ClInclude Include="ASGI.h" />
     <ClInclude Include="ASGI.hpp" />
@@ -161,6 +174,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ASGI.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cfg.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cpp.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cross.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_cross_util.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_glsl.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_hlsl.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_msl.cpp" />
+    <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp" />
+    <ClCompile Include="VkGLSL.cpp" />
     <ClCompile Include="VulkanGI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
