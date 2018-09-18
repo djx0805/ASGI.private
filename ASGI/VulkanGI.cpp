@@ -32,7 +32,7 @@ namespace ASGI {
 			VK_MAKE_VERSION(1, 0, 0),
 			"vulkanGI",
 			VK_MAKE_VERSION(1, 0, 0),
-			VK_MAKE_VERSION(1, 1, 0)
+			VK_MAKE_VERSION(1, 0, 0)
 		};
 		//
 		VkInstanceCreateInfo instance_create_info = {
@@ -387,6 +387,15 @@ namespace ASGI {
 					NULL,
 					});
 			};
+			for (auto &simpler : vs_resource.sampled_images) {
+				descriptorSets[vs_spirv_Compiler->get_decoration(simpler.id, spv::Decoration::DecorationDescriptorSet)].push_back({
+					vs_spirv_Compiler->get_decoration(simpler.id, spv::Decoration::DecorationBinding),
+					VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+					1,
+					VK_SHADER_STAGE_FRAGMENT_BIT,
+					NULL,
+				});
+			}
 		}
 		//fragment shader resource;
 		{
@@ -413,6 +422,22 @@ namespace ASGI {
 			}
 		}
 		//
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size());
+		for (auto &dsb : descriptorSets) {
+			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
+			descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			descriptorSetLayoutCreateInfo.pBindings = dsb.second.data();
+			descriptorSetLayoutCreateInfo.bindingCount = dsb.second.size();
+
+			if (vkCreateDescriptorSetLayout(mVkLogicDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[dsb.first]) != VK_SUCCESS) {
+				return nullptr;
+			}
+		}
+		//
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayouts.size();
+		pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 		return nullptr;
 	}
 
