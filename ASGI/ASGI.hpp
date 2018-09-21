@@ -321,7 +321,182 @@ namespace ASGI {
 		SHADER_STAGE_COMPUTE_BIT = 0x00000020,
 		SHADER_STAGE_ALL_GRAPHICS = 0x0000001F
 	} ;
+	typedef uint32_t ShaderStageFlags;
+
+
+	enum CullModeFlagBits {
+		CULL_MODE_NONE = 0,
+		CULL_MODE_FRONT_BIT = 0x00000001,
+		CULL_MODE_BACK_BIT = 0x00000002,
+		CULL_MODE_FRONT_AND_BACK = 0x00000003
+	};
+	typedef uint32_t CullModeFlags;
+
+	enum PrimitiveTopology {
+		PRIMITIVE_TOPOLOGY_POINT_LIST = 0,
+		PRIMITIVE_TOPOLOGY_LINE_LIST = 1,
+		PRIMITIVE_TOPOLOGY_LINE_STRIP = 2,
+		PRIMITIVE_TOPOLOGY_TRIANGLE_LIST = 3,
+		PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP = 4,
+		PRIMITIVE_TOPOLOGY_TRIANGLE_FAN = 5,
+		PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY = 6,
+		PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY = 7,
+		PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY = 8,
+		PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY = 9,
+		PRIMITIVE_TOPOLOGY_PATCH_LIST = 10
+	} ;
+
+	enum PolygonMode {
+		POLYGON_MODE_FILL = 0,
+		POLYGON_MODE_LINE = 1,
+		POLYGON_MODE_POINT = 2
+	};
+
+	enum FrontFace {
+		FRONT_FACE_COUNTER_CLOCKWISE = 0,
+		FRONT_FACE_CLOCKWISE = 1
+	};
+
+	enum CompareOp {
+		COMPARE_OP_NEVER = 0,
+	    COMPARE_OP_LESS = 1,
+		COMPARE_OP_EQUAL = 2,
+		COMPARE_OP_LESS_OR_EQUAL = 3,
+		COMPARE_OP_GREATER = 4,
+		COMPARE_OP_NOT_EQUAL = 5,
+		COMPARE_OP_GREATER_OR_EQUAL = 6,
+		COMPARE_OP_ALWAYS = 7
+	};
+
+	enum StencilOp {
+		STENCIL_OP_KEEP = 0,
+		STENCIL_OP_ZERO = 1,
+		STENCIL_OP_REPLACE = 2,
+		STENCIL_OP_INCREMENT_AND_CLAMP = 3,
+		STENCIL_OP_DECREMENT_AND_CLAMP = 4,
+		STENCIL_OP_INVERT = 5,
+		STENCIL_OP_INCREMENT_AND_WRAP = 6,
+		STENCIL_OP_DECREMENT_AND_WRAP = 7
+	};
+
+	enum LogicOp {
+		LOGIC_OP_CLEAR = 0,
+		LOGIC_OP_AND = 1,
+		LOGIC_OP_AND_REVERSE = 2,
+		LOGIC_OP_COPY = 3,
+		LOGIC_OP_AND_INVERTED = 4,
+		LOGIC_OP_NO_OP = 5,
+		LOGIC_OP_XOR = 6,
+		LOGIC_OP_OR = 7,
+		LOGIC_OP_NOR = 8,
+		LOGIC_OP_EQUIVALENT = 9,
+		LOGIC_OP_INVERT = 10,
+		LOGIC_OP_OR_REVERSE = 11,
+		LOGIC_OP_COPY_INVERTED = 12,
+		LOGIC_OP_OR_INVERTED = 13,
+		LOGIC_OP_NAND = 14,
+		LOGIC_OP_SET = 15
+	};
+
+	enum BlendFactor {
+		BLEND_FACTOR_ZERO = 0,
+		BLEND_FACTOR_ONE = 1,
+		BLEND_FACTOR_SRC_COLOR = 2,
+		BLEND_FACTOR_ONE_MINUS_SRC_COLOR = 3,
+		BLEND_FACTOR_DST_COLOR = 4,
+		BLEND_FACTOR_ONE_MINUS_DST_COLOR = 5,
+		BLEND_FACTOR_SRC_ALPHA = 6,
+		BLEND_FACTOR_ONE_MINUS_SRC_ALPHA = 7,
+		BLEND_FACTOR_DST_ALPHA = 8,
+		BLEND_FACTOR_ONE_MINUS_DST_ALPHA = 9,
+		BLEND_FACTOR_CONSTANT_COLOR = 10,
+		BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR = 11,
+		BLEND_FACTOR_CONSTANT_ALPHA = 12,
+		BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA = 13,
+		BLEND_FACTOR_SRC_ALPHA_SATURATE = 14,
+		BLEND_FACTOR_SRC1_COLOR = 15,
+		BLEND_FACTOR_ONE_MINUS_SRC1_COLOR = 16,
+		BLEND_FACTOR_SRC1_ALPHA = 17
+	};
+
+	enum BlendOp {
+		BLEND_OP_ADD = 0,
+		BLEND_OP_SUBTRACT = 1,
+		BLEND_OP_REVERSE_SUBTRACT = 2,
+		BLEND_OP_MIN = 3,
+		BLEND_OP_MAX = 4
+	};
+
+	enum ColorComponentFlagBits {
+		COLOR_COMPONENT_R_BIT = 0x00000001,
+		COLOR_COMPONENT_G_BIT = 0x00000002,
+		COLOR_COMPONENT_B_BIT = 0x00000004,
+		COLOR_COMPONENT_A_BIT = 0x00000008
+	};
+	typedef uint32_t ColorComponentFlags;
+
+	enum Filter {
+		FILTER_NEAREST = 0,
+		FILTER_LINEAR = 1
+	};
+
+	enum SamplerMipmapMode {
+		SAMPLER_MIPMAP_MODE_NEAREST = 0,
+		SAMPLER_MIPMAP_MODE_LINEAR = 1
+	};
+
+	enum SamplerAddressMode {
+		SAMPLER_ADDRESS_MODE_REPEAT = 0,
+		SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1,
+		SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2,
+		SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3,
+		SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE = 4
+	};
+
+	enum SampleCountFlagBits {
+		SAMPLE_COUNT_1_BIT = 0x00000001,
+		SAMPLE_COUNT_2_BIT = 0x00000002,
+		SAMPLE_COUNT_4_BIT = 0x00000004,
+		SAMPLE_COUNT_8_BIT = 0x00000008,
+		SAMPLE_COUNT_16_BIT = 0x00000010,
+		SAMPLE_COUNT_32_BIT = 0x00000020,
+		SAMPLE_COUNT_64_BIT = 0x00000040
+	};
+	typedef uint32_t SampleCountFlags;
+
+	enum QueueFlagBits {
+		QUEUE_GRAPHICS_BIT = 0x00000001,
+		QUEUE_COMPUTE_BIT = 0x00000002,
+		QUEUE_TRANSFER_BIT = 0x00000004,
+		QUEUE_SPARSE_BINDING_BIT = 0x00000008,
+		QUEUE_PROTECTED_BIT = 0x00000010
+	};
+	typedef uint32_t QueueFlags;
 	//
+
+	struct Viewport {
+		float    x;
+		float    y;
+		float    width;
+		float    height;
+		float    minDepth;
+		float    maxDepth;
+	};
+
+	struct Offset2D {
+		int32_t    x;
+		int32_t    y;
+	};
+
+	struct Extent2D {
+		uint32_t    width;
+		uint32_t    height;
+	};
+
+	struct Rect2D {
+		Offset2D    offset;
+		Extent2D    extent;
+	};
 
 	struct ShaderModuleCreateInfo {
 		const char* path;
@@ -358,26 +533,65 @@ namespace ASGI {
 	};
 
 	struct PipelineInputAssemblyState {
-
+		PrimitiveTopology toplogy = PrimitiveTopology::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		bool primitiveRestartEnable = true;
 	};
 
 	struct PipelineRasterizationState {
-
+		bool                                 depthClampEnable = false;
+		bool                                   rasterizerDiscardEnable = false;
+		PolygonMode                              polygonMode = PolygonMode::POLYGON_MODE_FILL;
+		CullModeFlags                            cullMode = CullModeFlagBits::CULL_MODE_BACK_BIT;
+		FrontFace                                frontFace = FrontFace::FRONT_FACE_COUNTER_CLOCKWISE;
+		bool                                 depthBiasEnable = false;
 	};
 
 	struct PipelineMultisampleState {
+		SampleCountFlagBits                    rasterizationSamples = SampleCountFlagBits::SAMPLE_COUNT_1_BIT;
+	};
 
+	struct StencilOpState {
+		StencilOp    failOp = StencilOp::STENCIL_OP_KEEP;
+		StencilOp    passOp = StencilOp::STENCIL_OP_KEEP;
+		StencilOp    depthFailOp = StencilOp::STENCIL_OP_KEEP;
+		CompareOp    compareOp = CompareOp::COMPARE_OP_NEVER;
+		uint32_t       compareMask = 0;
+		uint32_t       writeMask = 0;
+		uint32_t       reference = 0;
 	};
 
 	struct PipelineDepthStencilState {
+		bool                                 depthTestEnable = true;
+		bool                                  depthWriteEnable = true;
+		CompareOp                               depthCompareOp = CompareOp::COMPARE_OP_LESS;
+		bool                                depthBoundsTestEnable = false;
+		bool                                stencilTestEnable = false;
+		StencilOpState                          front;
+		StencilOpState                          back;
+		float                                     minDepthBounds = 0.0f;
+		float                                     maxDepthBounds = 1.0f;
+	};
 
+	struct PipelineColorBlendAttachmentState {
+		bool                       blendEnable = false;
+		BlendFactor            srcColorBlendFactor;
+		BlendFactor            dstColorBlendFactor;
+		BlendOp                colorBlendOp;
+		BlendFactor            srcAlphaBlendFactor;
+		BlendFactor            dstAlphaBlendFactor;
+		BlendOp                alphaBlendOp;
+		uint32_t                 colorWriteMask;
 	};
 
 	struct PipelineColorBlendState {
-
+		bool                                                                                    logicOpEnable = false;
+		LogicOp                                                                             logicOp = LogicOp::LOGIC_OP_COPY;
+		std::vector<PipelineColorBlendAttachmentState>  Attachments;
+		float                                                                                     blendConstants[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	};
 
 	struct GraphicsPipelineCreateInfo {
+		uint8_t viewportCount = 1;
 		PipelineShaderStage shaderStage;
 		PipelineVertexDeclaration vertexDeclaration;
 		PipelineInputAssemblyState inputAssemblyState;

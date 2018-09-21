@@ -27,4 +27,11 @@ namespace ASGI {
 		VkPresentModeKHR mVkPresentMode;
 		VkSwapchainKHR mVkSwapchain = nullptr;
 	};
+
+	class VKGraphicsPipeline : public GraphicsPipeline {
+		friend class VulkanGI;
+	private:
+		VkPipelineLayout mVkPipelineLayout;
+		VkPipeline mVkPipeLine;
+	};
 }
