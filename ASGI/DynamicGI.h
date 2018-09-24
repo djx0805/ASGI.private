@@ -11,13 +11,27 @@ namespace ASGI {
 		virtual bool Init(const char* device_name = nullptr) = 0;
 		//graphics pipeline
 		virtual ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info) = 0;
+		virtual RenderPass* CreateRenderPass(const RenderPassCreateInfo& create_info) = 0;
 		virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) = 0;
 		virtual Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info) = 0;
-		//render resource
-		virtual VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info) = 0;
-		virtual IndexBuffer* CreateIndexBuffer(const IndexBufferCreateInfo& create_info) = 0;
-		virtual UniformBuffer* CreateUniformBuffer(const UniformBufferCreateInfo& create_info) = 0;
-		virtual Texture2D* CreateTexture2D(const Texture2DCreateInfo& create_info) = 0;
+		//buffer resource
+		virtual VertexBuffer* CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) = 0;
+		virtual IndexBuffer* CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) = 0;
+		virtual UniformBuffer* CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) = 0;
+		virtual void BeginUpdateBuffer() = 0;
+		virtual void EndUpdateBuffer() = 0;
+		virtual void UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch = false) = 0;
+		virtual void UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch = false) = 0;
+		virtual void UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch = false) = 0;
+		virtual void* MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) = 0;
+		virtual void UnMapVertexBuffer(VertexBuffer* pbuffer) = 0;
+		virtual void* MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) = 0;
+		virtual void UnMapIndexBuffer(VertexBuffer* pbuffer) = 0;
+		virtual void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) = 0;
+		virtual void UnMapUniformBuffer(VertexBuffer* pbuffer) = 0;
+		virtual void DestroyBuffer(Buffer* targetBuffer) = 0;
+		//texture resource
+		virtual Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) = 0;
 		//render command
 		virtual CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info) = 0;
 		virtual void CmdSetViewport(CommandBuffer& commandBuffer) = 0;

@@ -165,6 +165,11 @@
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_hlsl.hpp" />
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_msl.hpp" />
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp" />
+    <ClInclude Include="Definitions.hpp" />
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Common.h" />
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Tests.h" />
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h" />
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.h" />
     <ClInclude Include="VkGLSL.hpp" />
     <ClInclude Include="GPUResource.h" />
     <ClInclude Include="ASGI.h" />
@@ -182,8 +187,15 @@
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_hlsl.cpp" />
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_msl.cpp" />
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp" />
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Common.cpp" />
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Tests.cpp" />
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.cpp" />
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VulkanSample.cpp" />
     <ClCompile Include="VkGLSL.cpp" />
     <ClCompile Include="VulkanGI.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

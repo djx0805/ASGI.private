@@ -110,13 +110,13 @@ namespace ASGI {
 		return false;
 	}
 
-	ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info) {
+	ShaderModule* CreateShaderModule(const char* shaderPath) {
 		//VKGLSL::GLSLLayout glslLayout;
 		//if (!VKGLSL::GLSLLayoutAnalyze(create_info.pcode, glslLayout)) {
 		//	return nullptr;
 		//}
 		//
-		std::string spirvPath = std::string(create_info.path) + ".spv";
+		std::string spirvPath = std::string(shaderPath) + ".spv";
 		std::string spirvCode;
 		FILE* pfile = fopen(spirvPath.c_str(), "rb");
 		if (pfile == nullptr) {
@@ -130,7 +130,7 @@ namespace ASGI {
 			PROCESS_INFORMATION pi;
 			ZeroMemory(&si, sizeof(si));
 			ZeroMemory(&pi, sizeof(pi));
-			std::string commandLine = glslangPath + " -V " + std::string(create_info.path) + " -o " + spirvPath;
+			std::string commandLine = glslangPath + " -V " + std::string(shaderPath) + " -o " + spirvPath;
 			if (CreateProcess(NULL, (LPSTR)commandLine.c_str(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
 				WaitForSingleObject(pi.hProcess, INFINITE);
 				CloseHandle(pi.hProcess);
@@ -150,6 +150,10 @@ namespace ASGI {
 		return pGI->CreateShaderModule(create_info_spirv);
 	}
 
+	RenderPass* CreateRenderPass(const RenderPassCreateInfo& create_info) {
+		return pGI->CreateRenderPass(create_info);
+	}
+
 	GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
 		return pGI->CreateGraphicsPipeline(create_info);
 	}
@@ -158,16 +162,24 @@ namespace ASGI {
 		return pGI->CreateSwapchain(create_info);
 	}
 
-	VertexBuffer* CreateVertexBuffer(const VertexBufferCreateInfo& create_info) {
-		return pGI->CreateVertexBuffer(create_info);
+	VertexBuffer* CreateVertexBuffer(uint64_t size, const char* pdata) {
+		return pGI->CreateVertexBuffer(size, pdata);
 	}
 
-	IndexBuffer* CreateIndexBuffer(const IndexBufferCreateInfo& create_info) {
-		return pGI->CreateIndexBuffer(create_info);
+	IndexBuffer* CreateIndexBuffer(uint32_t size, const char* pdata) {
+		return pGI->CreateIndexBuffer(size, pdata);
 	}
 
-	Texture2D* CreateTexture2D(const Texture2DCreateInfo& create_info) {
-		return pGI->CreateTexture2D(create_info);
+	UniformBuffer* CreateUniformBuffer(uint32_t size, const char* pdata) {
+		return pGI->CreateUniformBuffer(size, pdata);
+	}
+
+	Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
+		return pGI->CreateTexture2D(sizeX, sizeY, format, numMips, samples, usageFlags);
+	}
+
+	void DestroyBuffer(Buffer* targetBuffer) {
+		pGI->DestroyBuffer(targetBuffer);
 	}
 
 	CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {

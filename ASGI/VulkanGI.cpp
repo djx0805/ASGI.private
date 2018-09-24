@@ -1,6 +1,11 @@
 #include "VulkanResource.h"
 #include "VulkanGI.h"
 
+#include "third_lib\SPIRV-Cross\spirv_cross.hpp"
+
+#define VMA_IMPLEMENTATION
+#include "third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h"
+
 #ifdef _WIN32
 #pragma comment(lib, "VulkanSDK\\1.1.77.0\\Lib\\vulkan-1.lib")
 #endif
@@ -179,6 +184,15 @@ namespace ASGI {
 			return false;
 		}
 		//
+		VmaAllocatorCreateInfo allocatorInfo = {};
+		allocatorInfo.physicalDevice = mVkPhysicalDevice;
+		allocatorInfo.device = mVkLogicDevice;
+		VmaAllocator allocator;
+		if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS) {
+			return false;
+		}
+		mVkMemoryAllocator = allocator;
+		//
 		return true;
 	}
 
@@ -225,6 +239,91 @@ namespace ASGI {
 		psm->mSpirvCompiler = std::unique_ptr<spirv_cross::Compiler>(new spirv_cross::Compiler(std::move(buffer)));
 		//
 		return psm;
+	}
+
+	RenderPass* VulkanGI::CreateRenderPass(const RenderPassCreateInfo& create_info) {
+		std::vector<VkAttachmentDescription> attachmentDescs(create_info.attachments.size());
+		for (int i = 0; i < attachmentDescs.size(); ++i) {
+			attachmentDescs[i].flags = 0;
+			attachmentDescs[i].format = (VkFormat)create_info.attachments[i].format;
+			attachmentDescs[i].loadOp = (VkAttachmentLoadOp)create_info.attachments[i].loadOp;
+			attachmentDescs[i].storeOp = (VkAttachmentStoreOp)create_info.attachments[i].storeOp;
+			attachmentDescs[i].initialLayout = (VkImageLayout)create_info.attachments[i].initialLayout;
+			attachmentDescs[i].finalLayout = (VkImageLayout)create_info.attachments[i].finalLayout;
+			attachmentDescs[i].samples = (VkSampleCountFlagBits)create_info.attachments[i].samples;
+			attachmentDescs[i].stencilLoadOp = (VkAttachmentLoadOp)create_info.attachments[i].stencilLoadOp;
+			attachmentDescs[i].stencilStoreOp = (VkAttachmentStoreOp)create_info.attachments[i].stencilStoreOp;
+		}
+		//
+		std::vector<VkSubpassDescription> subpassDescriptions(create_info.subpasses.size());
+		std::vector<std::vector<VkAttachmentReference> > subpassColorReferences(subpassDescriptions.size());
+		std::vector<VkAttachmentReference> subpassDepthReferences(subpassDescriptions.size());
+		for (int i = 0; i < subpassDescriptions.size(); ++i) {
+			auto &subpass = create_info.subpasses[i];
+			//
+			subpassDescriptions[i].pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+			//
+			std::vector<VkAttachmentReference> inputReferences(subpass.inputAttachments.size());
+			for (int n = 0; i < inputReferences.size(); ++n) {
+				inputReferences[n].attachment = subpass.inputAttachments[n].attachment;
+				inputReferences[n].layout = (VkImageLayout)subpass.inputAttachments[n].layout;
+			}
+			//
+			auto &colorReferences = subpassColorReferences[i];
+			colorReferences.resize(subpass.colorAttachments.size());
+			for (int n = 0; n < colorReferences.size(); ++n) {
+				colorReferences[n].attachment = subpass.colorAttachments[n].attachment;
+				colorReferences[n].layout = (VkImageLayout)subpass.colorAttachments[n].layout;
+			}
+			subpassDescriptions[i].colorAttachmentCount = colorReferences.size();
+			subpassDescriptions[i].pColorAttachments = colorReferences.data();
+			//
+			if (create_info.subpasses[i].depthStencilAttachment.attachment >= 0) {
+				auto &depthStencilReference = subpassDepthReferences[i];
+				depthStencilReference.attachment = create_info.subpasses[i].depthStencilAttachment.attachment;
+				depthStencilReference.layout = (VkImageLayout)create_info.subpasses[i].depthStencilAttachment.layout;
+				subpassDescriptions[i].pDepthStencilAttachment = &depthStencilReference;
+			}
+			else {
+				subpassDescriptions[i].pDepthStencilAttachment = nullptr;
+			}
+			//
+			subpassDescriptions[i].pResolveAttachments = nullptr;
+			subpassDescriptions[i].preserveAttachmentCount = 0;
+			subpassDescriptions[i].pPreserveAttachments = nullptr;
+			subpassDescriptions[i].flags = 0;
+		}
+		//
+		std::vector<VkSubpassDependency> dependencies(create_info.dependencies.size());
+		for (int i = 0; i < dependencies.size(); ++i) {
+			auto &dependence = create_info.dependencies[i];
+			//
+			dependencies[i].dependencyFlags = 0;
+			dependencies[i].srcSubpass = dependence.srcSubpass;
+			dependencies[i].dstSubpass = dependence.dstSubpass;
+			dependencies[i].srcStageMask = (VkPipelineStageFlags)dependence.srcStageMask;
+			dependencies[i].dstStageMask = (VkPipelineStageFlags)dependence.dstStageMask;
+			dependencies[i].srcAccessMask = (VkAccessFlags)dependence.srcAccessMask;
+			dependencies[i].dstAccessMask = (VkAccessFlags)dependence.dstAccessMask;
+		}
+		//
+		VkRenderPassCreateInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescs.size());
+		renderPassInfo.pAttachments = attachmentDescs.data();
+		renderPassInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
+		renderPassInfo.pSubpasses = subpassDescriptions.data();
+		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		renderPassInfo.pDependencies = dependencies.data();
+		//
+		VkRenderPass renderPass;
+		if (vkCreateRenderPass(mVkLogicDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+			return nullptr;
+		}
+		//
+		auto pres = new VKRenderPass();
+		pres->mVkRenderPass = renderPass;
+		return pres;
 	}
 
 	GraphicsPipeline* VulkanGI::CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
@@ -380,10 +479,13 @@ namespace ASGI {
 			dynamic_states.data()
 		};
 		//
+		std::list<spirv_cross::EntryPoint> enteryPoints;
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		//
 		std::unordered_map<uint8_t, std::vector<VkDescriptorSetLayoutBinding> > descriptorSets;
 		std::vector<VkPushConstantRange> pushConstantRanges;
 		//
-		auto collectResource = [&](spirv_cross::Compiler* pspirvCompiler, uint32_t stageFlag)->void {
+		auto collectResource = [&](spirv_cross::Compiler* pspirvCompiler, uint32_t stageFlag, VkShaderModule shaderModule)->void {
 			auto vs_resource = pspirvCompiler->get_shader_resources();
 			for (auto &ubo : vs_resource.uniform_buffers)
 			{
@@ -415,22 +517,35 @@ namespace ASGI {
 				tmp.stageFlags = stageFlag;
 				pushConstantRanges.push_back(tmp);
 			}
+			//
+			VkPipelineShaderStageCreateInfo shaderStage = {};
+			shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shaderStage.stage = (VkShaderStageFlagBits)stageFlag;
+			shaderStage.module = shaderModule;
+			enteryPoints.push_back(std::move(pspirvCompiler->get_entry_points_and_stages()[0]));
+			shaderStage.pName = enteryPoints.back().name.c_str();
+			shaderStages.push_back(shaderStage);
 		};
 		//
 		if (create_info.shaderStage.pVertexShader != nullptr) {
-			collectResource(((VKShaderModule*)create_info.shaderStage.pVertexShader)->mSpirvCompiler.get(), VK_SHADER_STAGE_VERTEX_BIT);
+			auto pshader = (VKShaderModule*)create_info.shaderStage.pVertexShader;
+			collectResource(pshader->mSpirvCompiler.get(), VK_SHADER_STAGE_VERTEX_BIT, pshader->mShaderModule);
 		}
 		if (create_info.shaderStage.pTessControlShader != nullptr) {
-			collectResource(((VKShaderModule*)create_info.shaderStage.pTessControlShader)->mSpirvCompiler.get(), VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+			auto pshader = (VKShaderModule*)create_info.shaderStage.pTessControlShader;
+			collectResource(pshader->mSpirvCompiler.get(), VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, pshader->mShaderModule);
 		}
 		if (create_info.shaderStage.pTessEvaluationShader != nullptr) {
-			collectResource(((VKShaderModule*)create_info.shaderStage.pTessControlShader)->mSpirvCompiler.get(), VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+			auto pshader = (VKShaderModule*)create_info.shaderStage.pTessEvaluationShader;
+			collectResource(pshader->mSpirvCompiler.get(), VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, pshader->mShaderModule);
 		}
 		if (create_info.shaderStage.pGeomteryShader != nullptr) {
-			collectResource(((VKShaderModule*)create_info.shaderStage.pTessControlShader)->mSpirvCompiler.get(), VK_SHADER_STAGE_GEOMETRY_BIT);
+			auto pshader = (VKShaderModule*)create_info.shaderStage.pGeomteryShader;
+			collectResource(pshader->mSpirvCompiler.get(), VK_SHADER_STAGE_GEOMETRY_BIT, pshader->mShaderModule);
 		}
 		if (create_info.shaderStage.pFragmentShader != nullptr) {
-			collectResource(((VKShaderModule*)create_info.shaderStage.pTessControlShader)->mSpirvCompiler.get(), VK_SHADER_STAGE_FRAGMENT_BIT);
+			auto pshader = (VKShaderModule*)create_info.shaderStage.pFragmentShader;
+			collectResource(pshader->mSpirvCompiler.get(), VK_SHADER_STAGE_FRAGMENT_BIT, pshader->mShaderModule);
 		}
 		//
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size());
@@ -458,22 +573,34 @@ namespace ASGI {
 		//
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineCreateInfo.flags = 0;
 		pipelineCreateInfo.layout = pipelineLayout;
-		pipelineCreateInfo.renderPass = renderPass;
-		pipelineCreateInfo.flags = flags;
+		pipelineCreateInfo.renderPass = ((VKRenderPass*)create_info.renderPass)->mVkRenderPass;
+		pipelineCreateInfo.subpass = create_info.subpassIndex;
 		pipelineCreateInfo.basePipelineIndex = -1;
 		pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
-		pipelineCreateInfo.pRasterizationState = &rasterizationState;
-		pipelineCreateInfo.pColorBlendState = &colorBlendState;
-		pipelineCreateInfo.pMultisampleState = &multisampleState;
-		pipelineCreateInfo.pViewportState = &viewportState;
-		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
-		pipelineCreateInfo.pDynamicState = &dynamicState;
+		pipelineCreateInfo.pVertexInputState = &vertex_input_state_create_info;
+		pipelineCreateInfo.pTessellationState = nullptr;
+		pipelineCreateInfo.pInputAssemblyState = &input_assembly_state_create_info;
+		pipelineCreateInfo.pRasterizationState = &pipeline_rasterization_state_create_info;
+		pipelineCreateInfo.pColorBlendState = &color_blend_state_create_info;
+		pipelineCreateInfo.pMultisampleState = &multisample_state_create_info;
+		pipelineCreateInfo.pViewportState = &viewport_state_create_info;
+		pipelineCreateInfo.pDepthStencilState = &pipelineDepthStencilStateCreateInfo;
+		pipelineCreateInfo.pDynamicState = &dynamic_state_creat_info;
 		pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
 		pipelineCreateInfo.pStages = shaderStages.data();
-
-		return nullptr;
+		//
+		VkPipeline graphicsPipeline;
+		if (vkCreateGraphicsPipelines(mVkLogicDevice, nullptr, 1, &pipelineCreateInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+			return nullptr;
+		}
+		//
+		auto pres = new VKGraphicsPipeline();
+		pres->mVkPipeLine = graphicsPipeline;
+		pres->mVkPipelineLayout = pipelineLayout;
+		//
+		return pres;
 	}
 
 	Swapchain* VulkanGI::CreateSwapchain(const SwapchainCreateInfo& create_info) {
@@ -611,19 +738,157 @@ namespace ASGI {
 		return mSwapchain;
 	}
 
-	VertexBuffer* VulkanGI::CreateVertexBuffer(const VertexBufferCreateInfo& create_info) {
-		return nullptr;
+	int VulkanGI::getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties) {
+		for (int type = 0; type < mVkDeviceMemoryProperties.memoryTypeCount; ++type) {
+			if ((typeBits & (1 << type)) &&
+				((mVkDeviceMemoryProperties.memoryTypes[type].propertyFlags & properties) == properties)) {
+				return type;
+			}
+		}
+		//
+		return -1;
 	}
 
-	IndexBuffer* VulkanGI::CreateIndexBuffer(const IndexBufferCreateInfo& create_info) {
-		return nullptr;
+	bool VulkanGI::createBuffer(uint64_t size, VkBufferUsageFlags usageFlags, uint32_t createFlags, VKBuffer* pres) {
+		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufferInfo.size = size;
+		bufferInfo.usage = usageFlags;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = (VmaMemoryUsage)createFlags;
+		VkBuffer buffer;
+		VmaAllocation allocation;
+		if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS) {
+			return false;
+		}
+		//
+		pres->mVkBuffer = buffer;
+		pres->mAllocation = allocation;
+		//
+		return true;
 	}
 
-	UniformBuffer* VulkanGI::CreateUniformBuffer(const UniformBufferCreateInfo& create_info) {
-		return nullptr;
+	bool VulkanGI::updateBuffer(VKBuffer* buffer, uint32_t offset, uint32_t size, const char* pdata) {
+		auto memoryTypeIndex = (VmaAllocation(buffer->mAllocation))->GetMemoryTypeIndex();
+		auto memoryPropertyFlags = mVkDeviceMemoryProperties.memoryTypes[memoryTypeIndex].propertyFlags;
+		//
+		if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) {
+
+		}
+		else {
+			
+		}
+		//
+		return true;
 	}
 
-	Texture2D* VulkanGI::CreateTexture2D(const Texture2DCreateInfo& create_info) {
+	VertexBuffer* VulkanGI::CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
+		auto pres = new  VKVertexBuffer();
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+			delete pres;
+			return nullptr;
+		}
+		//
+		return pres;
+	}
+
+	IndexBuffer* VulkanGI::CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+		auto pres = new  VKIndexBuffer();
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+			delete pres;
+			return nullptr;
+		}
+		//
+		return pres;
+	}
+
+	UniformBuffer* VulkanGI::CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+		auto pres = new  VKUniformBuffer();
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+			delete pres;
+			return nullptr;
+		}
+		//
+		return pres;
+	}
+
+	void VulkanGI::BeginUpdateBuffer() {
+
+	}
+
+	void VulkanGI::EndUpdateBuffer() {
+
+	}
+
+	void VulkanGI::UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
+
+	}
+
+	void VulkanGI::UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
+
+	}
+
+	void VulkanGI::UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
+
+	}
+
+	void* VulkanGI::MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
+
+	}
+
+	void VulkanGI::UnMapVertexBuffer(VertexBuffer* pbuffer) {
+
+	}
+
+	void* VulkanGI::MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
+
+	}
+
+	void VulkanGI::UnMapIndexBuffer(VertexBuffer* pbuffer) {
+
+	}
+
+	void* VulkanGI::MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
+
+	}
+
+	void VulkanGI::UnMapUniformBuffer(VertexBuffer* pbuffer) {
+
+	}
+
+	void VulkanGI::DestroyBuffer(Buffer* targetBuffer) {
+
+	}
+
+	void VulkanGI::DestroyBuffer(Buffer* targetBuffer) {
+		if (targetBuffer->asVertexBuffer() != nullptr) {
+			vkDestroyBuffer(mVkLogicDevice, ((VKVertexBuffer*)targetBuffer->asVertexBuffer())->mVkBuffer, nullptr);
+			vkFreeMemory(mVkLogicDevice, ((VKVertexBuffer*)targetBuffer->asVertexBuffer())->mDeviceMemory, nullptr);
+		}
+		if (targetBuffer->asIndexBuffer() != nullptr) {
+			vkDestroyBuffer(mVkLogicDevice, ((VKIndexBuffer*)targetBuffer->asIndexBuffer())->mVkBuffer, nullptr);
+			vkFreeMemory(mVkLogicDevice, ((VKIndexBuffer*)targetBuffer->asIndexBuffer())->mDeviceMemory, nullptr);
+		}
+		if (targetBuffer->asUniformBuffer() != nullptr) {
+			vkDestroyBuffer(mVkLogicDevice, ((VKUniformBuffer*)targetBuffer->asUniformBuffer())->mVkBuffer, nullptr);
+			vkFreeMemory(mVkLogicDevice, ((VKUniformBuffer*)targetBuffer->asUniformBuffer())->mDeviceMemory, nullptr);
+		}
+	}
+
+	Texture2D* VulkanGI::CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
+		VkImageCreateInfo imageCreateInfo = {};
+		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageCreateInfo.pNext = NULL;
+		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageCreateInfo.format = (VkFormat)format;
+		imageCreateInfo.mipLevels = numMips;
+		imageCreateInfo.arrayLayers = 1;
+		imageCreateInfo.samples = (VkSampleCountFlagBits)samples;
+		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_GENERAL;
+		imageCreateInfo.extent = { sizeX, sizeY, 1 };
+		imageCreateInfo.usage = (VkImageUsageFlags)usageFlags;
+
 		return nullptr;
 	}
 

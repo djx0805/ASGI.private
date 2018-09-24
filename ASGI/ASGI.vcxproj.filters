@@ -25,6 +25,9 @@
     <Filter Include="spirv-cross">
       <UniqueIdentifier>{91f65b64-ba42-4c52-857c-2b7dee22ecd4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vulkan\VulkanMemoryAllocator">
+      <UniqueIdentifier>{7b3911e5-6bf8-4c34-aca5-d77c2503f7b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -84,6 +87,21 @@
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp">
       <Filter>spirv-cross</Filter>
     </ClInclude>
+    <ClInclude Include="Definitions.hpp">
+      <Filter>ASGI</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Common.h">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Tests.h">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.h">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanGI.cpp">
@@ -119,5 +137,22 @@
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp">
       <Filter>spirv-cross</Filter>
     </ClCompile>
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Common.cpp">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Tests.cpp">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.cpp">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VulkanSample.cpp">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.natvis">
+      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </Natvis>
   </ItemGroup>
 </Project>
