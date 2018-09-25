@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <list>
+#include <array>
 #include <memory>
 #include "ASGI.hpp"
 #ifdef _WIN32
@@ -73,5 +74,18 @@ namespace ASGI {
 		friend class VulkanGI;
 	private:
 		
+	};
+
+	class VKBufferUpdateContext : public BufferUpdateContext {
+		friend class VulkanGI;
+	public:
+		struct UpdateItem {
+			VKBuffer* dstBuffer;
+			uint32_t offset;
+			uint32_t size;
+			void* pdata;
+		};
+	private:
+		std::list<UpdateItem> updates;
 	};
 }

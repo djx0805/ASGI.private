@@ -189,6 +189,16 @@ namespace ASGI {
 
 	};
 
+	class BufferUpdateContext {
+	public:
+		virtual ~BufferUpdateContext() {}
+	};
+
+	class ImageUpdateContext {
+	public:
+		virtual ~ImageUpdateContext() {}
+	};
+
 	struct  Texture2DCreateInfo
 	{
 

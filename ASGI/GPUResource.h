@@ -36,6 +36,8 @@ namespace ASGI {
 		virtual UniformBuffer* asUniformBuffer() { return this; }
 	};
 
+	
+
 	class Image : public GPUResource {
 
 	};

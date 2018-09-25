@@ -90,16 +90,7 @@
     <ClInclude Include="Definitions.hpp">
       <Filter>ASGI</Filter>
     </ClInclude>
-    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Common.h">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClInclude>
-    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\Tests.h">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClInclude>
-    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClInclude>
-    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.h">
+    <ClInclude Include="third_lib\VulkanMemoryAllocator-master\src\vk_mem_alloc.h">
       <Filter>Vulkan\VulkanMemoryAllocator</Filter>
     </ClInclude>
   </ItemGroup>
@@ -137,22 +128,5 @@
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp">
       <Filter>spirv-cross</Filter>
     </ClCompile>
-    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Common.cpp">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClCompile>
-    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\Tests.cpp">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClCompile>
-    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VmaUsage.cpp">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClCompile>
-    <ClCompile Include="third_lib\VulkanMemoryAllocator\src\VulkanSample.cpp">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.natvis">
-      <Filter>Vulkan\VulkanMemoryAllocator</Filter>
-    </Natvis>
   </ItemGroup>
 </Project>

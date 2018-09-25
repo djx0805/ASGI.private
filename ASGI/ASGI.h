@@ -9,12 +9,23 @@ namespace ASGI {
 	ASGI_API GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info);
 	ASGI_API Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info);
 	//
-	ASGI_API VertexBuffer* CreateVertexBuffer(uint64_t size, const char* pdata = nullptr);
-	ASGI_API IndexBuffer* CreateIndexBuffer(uint32_t size, const char* pdata = nullptr);
-	ASGI_API UniformBuffer* CreateUniformBuffer(uint32_t size, const char* pdata = nullptr);
+	ASGI_API VertexBuffer* CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags);
+	ASGI_API IndexBuffer* CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags);
+	ASGI_API UniformBuffer* CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags);
+	ASGI_API BufferUpdateContext* BeginUpdateBuffer();
+	ASGI_API bool EndUpdateBuffer(BufferUpdateContext* pUpdateContext);
+	ASGI_API void UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext = nullptr);
+	ASGI_API void UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext = nullptr);
+	ASGI_API void UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext = nullptr);
+	ASGI_API void* MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE);
+	ASGI_API void UnMapVertexBuffer(VertexBuffer* pbuffer);
+	ASGI_API void* MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE);
+	ASGI_API void UnMapIndexBuffer(VertexBuffer* pbuffer);
+	ASGI_API void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE);
+	ASGI_API void UnMapUniformBuffer(VertexBuffer* pbuffer);
 	ASGI_API void DestroyBuffer(Buffer* targetBuffer);
 	//
-	ASGI_API Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
+	//ASGI_API Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
 
 	ASGI_API CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info);
 	ASGI_API void CmdSetViewport(CommandBuffer& commandBuffer);

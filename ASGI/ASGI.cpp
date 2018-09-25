@@ -162,20 +162,58 @@ namespace ASGI {
 		return pGI->CreateSwapchain(create_info);
 	}
 
-	VertexBuffer* CreateVertexBuffer(uint64_t size, const char* pdata) {
-		return pGI->CreateVertexBuffer(size, pdata);
+	VertexBuffer* CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
+		return pGI->CreateVertexBuffer(size, usageFlags);
 	}
 
-	IndexBuffer* CreateIndexBuffer(uint32_t size, const char* pdata) {
-		return pGI->CreateIndexBuffer(size, pdata);
+	IndexBuffer* CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+		return pGI->CreateIndexBuffer(size, usageFlags);
 	}
 
-	UniformBuffer* CreateUniformBuffer(uint32_t size, const char* pdata) {
-		return pGI->CreateUniformBuffer(size, pdata);
+	UniformBuffer* CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+		return pGI->CreateUniformBuffer(size, usageFlags);
 	}
 
-	Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
-		return pGI->CreateTexture2D(sizeX, sizeY, format, numMips, samples, usageFlags);
+	BufferUpdateContext* BeginUpdateBuffer() {
+		return pGI->BeginUpdateBuffer();
+	}
+
+	bool EndUpdateBuffer(BufferUpdateContext* pUpdateContext) {
+		return pGI->EndUpdateBuffer(pUpdateContext);
+	}
+
+	void UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		pGI->UpdateVertexBuffer(pbuffer, offset, size, pdata, pUpdateContext);
+	}
+
+	void UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		pGI->UpdateIndexBuffer(pbuffer, offset, size, pdata, pUpdateContext);
+	}
+
+	void UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		pGI->UpdateUniformBuffer(pbuffer, offset, size, pdata, pUpdateContext);
+	}
+
+	void* MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
+	}
+
+	void UnMapVertexBuffer(VertexBuffer* pbuffer) {
+	}
+
+	void* MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
+	}
+
+	void UnMapIndexBuffer(VertexBuffer* pbuffer) {
+	}
+
+	void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
+	}
+
+	void UnMapUniformBuffer(VertexBuffer* pbuffer) {
+
 	}
 
 	void DestroyBuffer(Buffer* targetBuffer) {

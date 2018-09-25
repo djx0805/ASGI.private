@@ -4,7 +4,7 @@
 #include "third_lib\SPIRV-Cross\spirv_cross.hpp"
 
 #define VMA_IMPLEMENTATION
-#include "third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h"
+#include "third_lib\VulkanMemoryAllocator-master\src\vk_mem_alloc.h"
 
 #ifdef _WIN32
 #pragma comment(lib, "VulkanSDK\\1.1.77.0\\Lib\\vulkan-1.lib")
@@ -767,15 +767,90 @@ namespace ASGI {
 		return true;
 	}
 
-	bool VulkanGI::updateBuffer(VKBuffer* buffer, uint32_t offset, uint32_t size, const char* pdata) {
-		auto memoryTypeIndex = (VmaAllocation(buffer->mAllocation))->GetMemoryTypeIndex();
+	bool VulkanGI::updateBuffer(VKBuffer* buffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		auto vmaAllocation = VmaAllocation(buffer->mAllocation);
+		auto memoryTypeIndex = vmaAllocation->GetMemoryTypeIndex();
 		auto memoryPropertyFlags = mVkDeviceMemoryProperties.memoryTypes[memoryTypeIndex].propertyFlags;
 		//
 		if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) {
-
+			void* pdstData = nullptr;
+			if (vmaMapMemory((VmaAllocator)mVkMemoryAllocator, vmaAllocation, &pdstData) == VK_SUCCESS) {
+				memcpy(pdstData, pdata, size);
+				vmaUnmapMemory((VmaAllocator)mVkMemoryAllocator, vmaAllocation);
+				if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0) {
+					vmaFlushAllocation((VmaAllocator)mVkMemoryAllocator, vmaAllocation, offset, size);
+				}
+				//
+				return true;
+			}
 		}
-		else {
-			
+		//
+		if (pUpdateContext != nullptr) {
+			VKBufferUpdateContext::UpdateItem tmp;
+			tmp.dstBuffer = buffer;
+			tmp.offset = offset;
+			tmp.size = size;
+			tmp.pdata = pdata;
+			((VKBufferUpdateContext*)pUpdateContext)->updates.push_back(tmp);
+			//
+			return true;
+		}
+		//
+		VkBufferCreateInfo vbInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		vbInfo.size = size;
+		vbInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		vbInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		VmaAllocationCreateInfo vbAllocCreateInfo = {};
+		vbAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		vbAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VkBuffer stagingBuffer = VK_NULL_HANDLE;
+		VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
+		VmaAllocationInfo stagingBufferAllocInfo = {};
+		if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &vbInfo, &vbAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingBufferAllocInfo) != VK_SUCCESS) {
+			return false;
+		}
+		//
+		memcpy(stagingBufferAllocInfo.pMappedData, pdata, size);
+		//
+		if (!BeginSingleTimeCommands()) {
+			vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, stagingBuffer, stagingBufferAlloc);
+			return false;
+		}
+		//
+		VkBufferCopy vbCopyRegion = {};
+		vbCopyRegion.srcOffset = offset;
+		vbCopyRegion.dstOffset = stagingBufferAllocInfo.offset;
+		vbCopyRegion.size = size;
+		vkCmdCopyBuffer(mVkTemporaryCommandBuffer, stagingBuffer, buffer->mVkBuffer, 1, &vbCopyRegion);
+		//
+		auto res = EndSingleTimeCommands();
+		vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, stagingBuffer, stagingBufferAlloc);
+		//
+		return res;
+	}
+
+	bool VulkanGI::BeginSingleTimeCommands() {
+		VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		if (vkBeginCommandBuffer(mVkTemporaryCommandBuffer, &cmdBufBeginInfo) == VK_SUCCESS) {
+			return true;
+		}
+		//
+		return false;
+	}
+
+	bool VulkanGI::EndSingleTimeCommands() {
+		vkEndCommandBuffer(mVkTemporaryCommandBuffer);
+
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &mVkTemporaryCommandBuffer;
+
+		if (vkQueueSubmit(mVkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS &&
+			vkQueueWaitIdle(mVkGraphicsQueue) != VK_SUCCESS) {
+			return false;
 		}
 		//
 		return true;
@@ -811,44 +886,90 @@ namespace ASGI {
 		return pres;
 	}
 
-	void VulkanGI::BeginUpdateBuffer() {
-
+	BufferUpdateContext* VulkanGI::BeginUpdateBuffer() {
+		return new VKBufferUpdateContext();
 	}
 
-	void VulkanGI::EndUpdateBuffer() {
+	bool VulkanGI::EndUpdateBuffer(BufferUpdateContext* pUpdateContext) {
+		std::vector<std::array<void*, 3> >copys(((VKBufferUpdateContext*)pUpdateContext)->updates.size());
+		//
+		int index = 0;
+		for (auto &itm : ((VKBufferUpdateContext*)pUpdateContext)->updates) {
+			VkBufferCreateInfo vbInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			vbInfo.size = itm.size;
+			vbInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			vbInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+			VmaAllocationCreateInfo vbAllocCreateInfo = {};
+			vbAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			vbAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+			VkBuffer stagingBuffer = VK_NULL_HANDLE;
+			VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
+			VmaAllocationInfo stagingBufferAllocInfo = {};
+			if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &vbInfo, &vbAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingBufferAllocInfo) != VK_SUCCESS) {
+				continue;
+			}
+			//
+			memcpy(stagingBufferAllocInfo.pMappedData, itm.pdata, itm.size);
+			//
+			std::array<void*, 3> tmp = { itm.dstBuffer, stagingBuffer, stagingBufferAlloc };
+			copys[index][0] = itm.dstBuffer;
+			copys[index][1] = stagingBuffer;
+			copys[index][2] = stagingBufferAlloc;
+			++index;
+		}
+		//
+		if (!BeginSingleTimeCommands()) {
+			return false;
+		}
+		//
+		for (auto & itm : copys) {
+			VkBufferCopy vbCopyRegion = {};
+			vbCopyRegion.srcOffset = ((VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation)->GetOffset();
+			vbCopyRegion.dstOffset = ((VmaAllocation)itm[2])->GetOffset();
+			vbCopyRegion.size = ((VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation)->GetSize();
+			vkCmdCopyBuffer(mVkTemporaryCommandBuffer, (VkBuffer)itm[1], ((VKBuffer*)(itm[0]))->mVkBuffer, 1, &vbCopyRegion);
+		}
+		//
+		auto res = EndSingleTimeCommands();
+		//
+		for (auto & itm : copys) {
+			vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, (VkBuffer)itm[1], (VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation);
+		}
+		//
+		return res;
 	}
 
-	void VulkanGI::UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
-
+	void VulkanGI::UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
-	void VulkanGI::UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
-
+	void VulkanGI::UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
-	void VulkanGI::UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, bool inBatch) {
-
+	void VulkanGI::UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
-	void* VulkanGI::MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
-
+	void* VulkanGI::MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
 	}
 
 	void VulkanGI::UnMapVertexBuffer(VertexBuffer* pbuffer) {
-
 	}
 
-	void* VulkanGI::MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
-
+	void* VulkanGI::MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
 	}
 
 	void VulkanGI::UnMapIndexBuffer(VertexBuffer* pbuffer) {
 
 	}
 
-	void* VulkanGI::MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) {
-
+	void* VulkanGI::MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+		return nullptr;
 	}
 
 	void VulkanGI::UnMapUniformBuffer(VertexBuffer* pbuffer) {
@@ -856,25 +977,21 @@ namespace ASGI {
 	}
 
 	void VulkanGI::DestroyBuffer(Buffer* targetBuffer) {
-
-	}
-
-	void VulkanGI::DestroyBuffer(Buffer* targetBuffer) {
+		VKBuffer* pbuffer = nullptr;
 		if (targetBuffer->asVertexBuffer() != nullptr) {
-			vkDestroyBuffer(mVkLogicDevice, ((VKVertexBuffer*)targetBuffer->asVertexBuffer())->mVkBuffer, nullptr);
-			vkFreeMemory(mVkLogicDevice, ((VKVertexBuffer*)targetBuffer->asVertexBuffer())->mDeviceMemory, nullptr);
+			pbuffer = (VKBuffer*)((VKVertexBuffer*)targetBuffer->asVertexBuffer());
 		}
 		if (targetBuffer->asIndexBuffer() != nullptr) {
-			vkDestroyBuffer(mVkLogicDevice, ((VKIndexBuffer*)targetBuffer->asIndexBuffer())->mVkBuffer, nullptr);
-			vkFreeMemory(mVkLogicDevice, ((VKIndexBuffer*)targetBuffer->asIndexBuffer())->mDeviceMemory, nullptr);
+			pbuffer = (VKBuffer*)((VKIndexBuffer*)targetBuffer->asIndexBuffer());
 		}
 		if (targetBuffer->asUniformBuffer() != nullptr) {
-			vkDestroyBuffer(mVkLogicDevice, ((VKUniformBuffer*)targetBuffer->asUniformBuffer())->mVkBuffer, nullptr);
-			vkFreeMemory(mVkLogicDevice, ((VKUniformBuffer*)targetBuffer->asUniformBuffer())->mDeviceMemory, nullptr);
+			pbuffer = (VKBuffer*)((VKUniformBuffer*)targetBuffer->asUniformBuffer());
 		}
+		//
+		vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, pbuffer->mVkBuffer, (VmaAllocation)pbuffer->mAllocation);
 	}
 
-	Texture2D* VulkanGI::CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
+	Image2D* VulkanGI::CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.pNext = NULL;
