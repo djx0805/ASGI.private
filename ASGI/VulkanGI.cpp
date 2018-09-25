@@ -4,7 +4,7 @@
 #include "third_lib\SPIRV-Cross\spirv_cross.hpp"
 
 #define VMA_IMPLEMENTATION
-#include "third_lib\VulkanMemoryAllocator-master\src\vk_mem_alloc.h"
+#include "third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h"
 
 #ifdef _WIN32
 #pragma comment(lib, "VulkanSDK\\1.1.77.0\\Lib\\vulkan-1.lib")
@@ -991,6 +991,25 @@ namespace ASGI {
 		vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, pbuffer->mVkBuffer, (VmaAllocation)pbuffer->mAllocation);
 	}
 
+	VkImageAspectFlags getImageAspectFlags(Format format, ImageUsageFlags usageFlags) {
+		if ((usageFlags & ImageUsageFlagBits::IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0) {
+			switch (format)
+			{
+			case ASGI::FORMAT_D16_UNORM:
+			case ASGI::FORMAT_X8_D24_UNORM_PACK32:
+			case ASGI::FORMAT_D32_SFLOAT:
+				return VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
+			case ASGI::FORMAT_S8_UINT:
+				return  VK_IMAGE_ASPECT_STENCIL_BIT;
+			case ASGI::FORMAT_D16_UNORM_S8_UINT:
+			case ASGI::FORMAT_D24_UNORM_S8_UINT:
+			case ASGI::FORMAT_D32_SFLOAT_S8_UINT:
+				return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+		//
+		return VK_IMAGE_ASPECT_COLOR_BIT;
+	}
 	Image2D* VulkanGI::CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1004,9 +1023,38 @@ namespace ASGI {
 		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_GENERAL;
 		imageCreateInfo.extent = { sizeX, sizeY, 1 };
-		imageCreateInfo.usage = (VkImageUsageFlags)usageFlags;
+		imageCreateInfo.usage = (usageFlags<< 2) | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-		return nullptr;
+		VmaAllocationCreateInfo imageAllocCreateInfo = {};
+		imageAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		VmaAllocation imageAlloc;
+		VkImage vkImage;
+		if (vmaCreateImage((VmaAllocator)mVkMemoryAllocator, &imageCreateInfo, &imageAllocCreateInfo, &vkImage, &imageAlloc, nullptr) != VK_SUCCESS) {
+			return nullptr;
+		}
+		//
+		VkImageViewCreateInfo textureImageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		textureImageViewInfo.image = vkImage;
+		textureImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		textureImageViewInfo.format = (VkFormat)format;
+		textureImageViewInfo.subresourceRange.aspectMask = getImageAspectFlags(format, usageFlags);
+		textureImageViewInfo.subresourceRange.baseMipLevel = 0;
+		textureImageViewInfo.subresourceRange.levelCount = 1;
+		textureImageViewInfo.subresourceRange.baseArrayLayer = 0;
+		textureImageViewInfo.subresourceRange.layerCount = 1;
+		VkImageView imageView;
+		if (vkCreateImageView(mVkLogicDevice, &textureImageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
+			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, vkImage, imageAlloc);
+			return nullptr;
+		}
+		//
+		auto pres = new VKImage2D();
+		pres->mVkImage = vkImage;
+		pres->mAllocation = imageAlloc;
+		pres->mUsageFlag = usageFlags;
+		pres->mDefaultView = imageView;
+		//
+		return pres;
 	}
 
 	CommandBuffer* VulkanGI::CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {

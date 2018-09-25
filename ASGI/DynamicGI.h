@@ -32,6 +32,7 @@ namespace ASGI {
 		virtual void DestroyBuffer(Buffer* targetBuffer) = 0;
 		//texture resource
 		virtual Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) = 0;
+
 		virtual ImageUpdateContext* BeginUpdateImage() = 0;
 		virtual bool EndUpdateImage(ImageUpdateContext* pUpdateContext) = 0;
 		virtual bool UpdateImage2D(Image2D* pimg, uint32_t level, const Rect2D& updateRegion, void* pdata, ImageUpdateContext* pUpdateContext = nullptr) = 0;

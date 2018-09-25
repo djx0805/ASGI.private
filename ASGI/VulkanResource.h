@@ -88,4 +88,19 @@ namespace ASGI {
 	private:
 		std::list<UpdateItem> updates;
 	};
+
+	class VKImage {
+		friend class VulkanGI;
+	private:
+	    VkImage mVkImage;
+		ImageUsageFlags mUsageFlag;
+		void* mAllocation;
+		VkImageView mDefaultView;
+	};
+
+	class VKImage2D : public VKImage, public Image2D {
+		friend class VulkanGI;
+	private:
+
+	};
 }
