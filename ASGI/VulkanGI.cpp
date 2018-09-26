@@ -1010,6 +1010,72 @@ namespace ASGI {
 		//
 		return VK_IMAGE_ASPECT_COLOR_BIT;
 	}
+	inline VkPipelineStageFlags GetImageBarrierFlags(EImageLayoutBarrier Target, VkAccessFlags& AccessFlags, VkImageLayout& Layout)
+	{
+		VkPipelineStageFlags StageFlags = (VkPipelineStageFlags)0;
+		switch (Target)
+		{
+		case EImageLayoutBarrier::Undefined:
+			AccessFlags = 0;
+			StageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			Layout = VK_IMAGE_LAYOUT_UNDEFINED;
+			break;
+
+		case EImageLayoutBarrier::TransferDest:
+			AccessFlags = VK_ACCESS_TRANSFER_WRITE_BIT;
+			StageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			Layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::ColorAttachment:
+			AccessFlags = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			StageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::DepthStencilAttachment:
+			AccessFlags = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			StageFlags = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			Layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::TransferSource:
+			AccessFlags = VK_ACCESS_TRANSFER_READ_BIT;
+			StageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			Layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::Present:
+			AccessFlags = 0;
+			StageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			Layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			break;
+
+		case EImageLayoutBarrier::PixelShaderRead:
+			AccessFlags = VK_ACCESS_SHADER_READ_BIT;
+			StageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			Layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::PixelDepthStencilRead:
+			AccessFlags = VK_ACCESS_SHADER_READ_BIT;
+			StageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			Layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			break;
+
+		case EImageLayoutBarrier::ComputeGeneralRW:
+			AccessFlags = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			StageFlags = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+			Layout = VK_IMAGE_LAYOUT_GENERAL;
+			break;
+
+		default:
+			checkf(0, TEXT("Unknown ImageLayoutBarrier %d"), (int32)Target);
+			break;
+		}
+
+		return StageFlags;
+	}
 	Image2D* VulkanGI::CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1033,29 +1099,169 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		VkImageViewCreateInfo textureImageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-		textureImageViewInfo.image = vkImage;
-		textureImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		textureImageViewInfo.format = (VkFormat)format;
-		textureImageViewInfo.subresourceRange.aspectMask = getImageAspectFlags(format, usageFlags);
-		textureImageViewInfo.subresourceRange.baseMipLevel = 0;
-		textureImageViewInfo.subresourceRange.levelCount = 1;
-		textureImageViewInfo.subresourceRange.baseArrayLayer = 0;
-		textureImageViewInfo.subresourceRange.layerCount = 1;
+		VkImageViewCreateInfo imageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		imageViewInfo.image = vkImage;
+		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewInfo.format = (VkFormat)format;
+		imageViewInfo.subresourceRange.aspectMask = getImageAspectFlags(format, usageFlags);
+		imageViewInfo.subresourceRange.baseMipLevel = 0;
+		imageViewInfo.subresourceRange.levelCount = 1;
+		imageViewInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewInfo.subresourceRange.layerCount = 1;
 		VkImageView imageView;
-		if (vkCreateImageView(mVkLogicDevice, &textureImageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
+		if (vkCreateImageView(mVkLogicDevice, &imageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
 			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, vkImage, imageAlloc);
 			return nullptr;
 		}
 		//
-		auto pres = new VKImage2D();
+		auto pres = new VKImage2D(format, sizeX, sizeY, numMips);
 		pres->mVkImage = vkImage;
 		pres->mAllocation = imageAlloc;
 		pres->mUsageFlag = usageFlags;
-		pres->mDefaultView = imageView;
+		pres->mImageInfo = imageCreateInfo;
+		pres->mOrgiView = new VKImageView(pres, imageView, imageViewInfo);
 		//
 		return pres;
 	}
+
+	ImageView* VulkanGI::CreateImageView(Image2D* srcImage, uint32_t mipLevel) {
+		return nullptr;
+	}
+
+	ImageView* VulkanGI::CreateImageView(Image2D* srcImage, uint32_t mipLevel, uint32_t numMipLevels, Format format) {
+		return nullptr;
+	}
+
+
+	ImageUpdateContext* VulkanGI::BeginUpdateImage() {
+		return new VKImageUpdateContext();
+	}
+
+	bool VulkanGI::EndUpdateImage(ImageUpdateContext* pUpdateContext) {
+		return false;
+	}
+
+	bool VulkanGI::UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext) {
+		if (pUpdateContext != nullptr) {
+
+		}
+		//
+		VkImageCreateInfo stagingImageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+		stagingImageInfo.imageType = VK_IMAGE_TYPE_2D;
+		stagingImageInfo.extent.width = sizeX;
+		stagingImageInfo.extent.height = sizeY;
+		stagingImageInfo.extent.depth = 1;
+		stagingImageInfo.mipLevels = 1;
+		stagingImageInfo.arrayLayers = 1;
+		stagingImageInfo.format = (VkFormat)pimg->GetFormat();
+		stagingImageInfo.tiling = VK_IMAGE_TILING_LINEAR;
+		stagingImageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+		stagingImageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		stagingImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		stagingImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		stagingImageInfo.flags = 0;
+
+		VmaAllocationCreateInfo stagingImageAllocCreateInfo = {};
+		stagingImageAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		stagingImageAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VkImage stagingImage = VK_NULL_HANDLE;
+		VmaAllocation stagingImageAlloc = VK_NULL_HANDLE;
+		VmaAllocationInfo stagingImageAllocInfo = {};
+		if (vmaCreateImage((VmaAllocator)mVkMemoryAllocator, &stagingImageInfo, &stagingImageAllocCreateInfo, &stagingImage, &stagingImageAlloc, &stagingImageAllocInfo)) {
+			return false;
+		}
+		//
+		auto aspectMask = ((VKImageView*)pimg->GetOrigView())->mViewInfo.subresourceRange.aspectMask;
+		//
+		VkImageSubresource imageSubresource = {};
+		imageSubresource.aspectMask = aspectMask;
+		imageSubresource.mipLevel = 0;
+		imageSubresource.arrayLayer = 0;
+
+		VkSubresourceLayout imageLayout = {};
+		vkGetImageSubresourceLayout(mVkLogicDevice, stagingImage, &imageSubresource, &imageLayout);
+
+		char* const pMipLevelData = (char*)stagingImageAllocInfo.pMappedData + imageLayout.offset;
+		uint8_t* pRowData = (uint8_t*)pMipLevelData;
+		memcpy(pRowData, pdata, imageLayout.size);
+		//
+		if (!BeginSingleTimeCommands()) {
+			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+			return false;
+		}
+		//
+		VkImageMemoryBarrier imgMemBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+		imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+		imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		imgMemBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imgMemBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imgMemBarrier.image = stagingImage;
+		imgMemBarrier.subresourceRange.aspectMask = aspectMask;
+		imgMemBarrier.subresourceRange.baseMipLevel = 0;
+		imgMemBarrier.subresourceRange.levelCount = 1;
+		imgMemBarrier.subresourceRange.baseArrayLayer = 0;
+		imgMemBarrier.subresourceRange.layerCount = 1;
+		imgMemBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+		imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+		vkCmdPipelineBarrier(
+			mVkTemporaryCommandBuffer,
+			VK_PIPELINE_STAGE_HOST_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &imgMemBarrier);
+
+		imgMemBarrier.oldLayout = ((VKImage2D*)pimg)->mImageInfo.initialLayout;
+		imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		imgMemBarrier.image = ((VKImage2D*)pimg->asImage2D())->mVkImage;
+		imgMemBarrier.srcAccessMask = 0;
+		imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		vkCmdPipelineBarrier(
+			mVkTemporaryCommandBuffer,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &imgMemBarrier);
+
+		VkImageCopy imageCopy = {};
+		imageCopy.srcSubresource.aspectMask = aspectMask;
+		imageCopy.srcSubresource.baseArrayLayer = 0;
+		imageCopy.srcSubresource.mipLevel = 0;
+		imageCopy.srcSubresource.layerCount = 1;
+		imageCopy.dstSubresource.aspectMask = aspectMask;
+		imageCopy.dstSubresource.baseArrayLayer = 0;
+		imageCopy.dstSubresource.mipLevel = 0;
+		imageCopy.dstSubresource.layerCount = 1;
+		imageCopy.srcOffset.x = 0;
+		imageCopy.srcOffset.y = 0;
+		imageCopy.srcOffset.z = 0;
+		imageCopy.dstOffset.x = offsetX;
+		imageCopy.dstOffset.y = offsetY;
+		imageCopy.dstOffset.z = 0;
+		imageCopy.extent.width = sizeX;
+		imageCopy.extent.height = sizeY;
+		imageCopy.extent.depth = 1;
+		vkCmdCopyImage(
+			mVkTemporaryCommandBuffer,
+			stagingImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			((VKImage2D*)pimg->asImage2D())->mVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1, &imageCopy);
+		//
+		if (!EndSingleTimeCommands()) {
+			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+			return false;
+		}
+		//
+		vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+		return true;
+	}
+
 
 	CommandBuffer* VulkanGI::CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
 		return nullptr;

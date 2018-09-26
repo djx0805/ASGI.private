@@ -11,7 +11,6 @@
 #include "VulkanSDK\1.1.77.0\Include\vulkan\vulkan.h"
 
 
-
 namespace spirv_cross {
 	class Compiler;
 }
@@ -89,16 +88,55 @@ namespace ASGI {
 		std::list<UpdateItem> updates;
 	};
 
+	class VKImage2D;
+	class VKImageView;
 	class VKImage {
 		friend class VulkanGI;
-	private:
+	public:
+		~VKImage() {
+			mOrgiView->unref();
+		}
+		VKImage2D* asVKImage2D() { return nullptr; }
+	protected:
+		VKImage(){}
+	protected:
 	    VkImage mVkImage;
 		ImageUsageFlags mUsageFlag;
 		void* mAllocation;
-		VkImageView mDefaultView;
+		VKImageView* mOrgiView;
+		VkImageCreateInfo mImageInfo;
+	};
+
+	class VKImageView : public ImageView {
+		friend class VulkanGI;
+	public:
+		VKImageView(Image* pimg, VkImageView pview, VkImageViewCreateInfo viewInfo) {
+			mSrcImage = pimg;
+			mImageView = pview;
+			mViewInfo = viewInfo;
+		}
+		Image* GetSrcImage() override {
+			if (mSrcImage->asImage2D() != nullptr) {
+				return (Image*)mSrcImage->asImage2D();
+			}
+		}
+	private:
+		image_ptr mSrcImage;
+		VkImageView mImageView;
+		VkImageViewCreateInfo mViewInfo
 	};
 
 	class VKImage2D : public VKImage, public Image2D {
+		friend class VulkanGI;
+	public:
+		VKImage2D(Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image2D(format, sizeX, sizeY, numMip) {}
+		//
+		ImageView* GetOrigView() override {
+			return mOrgiView;
+		}
+	};
+
+	class VKImageUpdateContext : public ImageUpdateContext {
 		friend class VulkanGI;
 	private:
 

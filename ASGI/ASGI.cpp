@@ -110,7 +110,7 @@ namespace ASGI {
 		return false;
 	}
 
-	ShaderModule* CreateShaderModule(const char* shaderPath) {
+	shader_module_ptr CreateShaderModule(const char* shaderPath) {
 		//VKGLSL::GLSLLayout glslLayout;
 		//if (!VKGLSL::GLSLLayoutAnalyze(create_info.pcode, glslLayout)) {
 		//	return nullptr;
@@ -150,31 +150,31 @@ namespace ASGI {
 		return pGI->CreateShaderModule(create_info_spirv);
 	}
 
-	RenderPass* CreateRenderPass(const RenderPassCreateInfo& create_info) {
+	render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info) {
 		return pGI->CreateRenderPass(create_info);
 	}
 
-	GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
+	graphics_pipeline_ptr CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
 		return pGI->CreateGraphicsPipeline(create_info);
 	}
 
-	Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info) {
+	swapchain_ptr CreateSwapchain(const SwapchainCreateInfo& create_info) {
 		return pGI->CreateSwapchain(create_info);
 	}
 
-	VertexBuffer* CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
+	vertex_buffer_ptr CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
 		return pGI->CreateVertexBuffer(size, usageFlags);
 	}
 
-	IndexBuffer* CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+	index_buffer_ptr CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
 		return pGI->CreateIndexBuffer(size, usageFlags);
 	}
 
-	UniformBuffer* CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
+	uniform_buffer_ptr CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
 		return pGI->CreateUniformBuffer(size, usageFlags);
 	}
 
-	BufferUpdateContext* BeginUpdateBuffer() {
+	buffer_update_contex_ptr BeginUpdateBuffer() {
 		return pGI->BeginUpdateBuffer();
 	}
 
@@ -220,7 +220,7 @@ namespace ASGI {
 		pGI->DestroyBuffer(targetBuffer);
 	}
 
-	CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
+	command_buffer_ptr CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
 		return pGI->CreateCommandBuffer(create_info);
 	}
 

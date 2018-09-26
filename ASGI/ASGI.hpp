@@ -7,7 +7,7 @@
 #endif
 
 #include <vector>
-#include "GPUResource.h"
+#include "Resource.h"
 
 namespace ASGI {
 	extern ASGI_API bool GSupportParallelCommandBuffer;
@@ -189,15 +189,7 @@ namespace ASGI {
 
 	};
 
-	class BufferUpdateContext {
-	public:
-		virtual ~BufferUpdateContext() {}
-	};
-
-	class ImageUpdateContext {
-	public:
-		virtual ~ImageUpdateContext() {}
-	};
+	
 
 	struct  Texture2DCreateInfo
 	{

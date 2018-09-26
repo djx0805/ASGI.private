@@ -30,6 +30,12 @@ namespace ASGI {
 		void DestroyBuffer(Buffer* targetBuffer) override;
 
 		Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) override;
+		ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel) override;
+		ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel, uint32_t numMipLevels, Format format) override;
+
+		ImageUpdateContext* BeginUpdateImage() override;
+		bool EndUpdateImage(ImageUpdateContext* pUpdateContext) override;
+		bool UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext = nullptr) override;
 
 		CommandBuffer* CreateCommandBuffer(const CommandBufferCreateInfo& create_info) override;
 		void CmdSetViewport(CommandBuffer& commandBuffer) override;
