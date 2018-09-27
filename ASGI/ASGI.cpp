@@ -216,10 +216,6 @@ namespace ASGI {
 
 	}
 
-	void DestroyBuffer(Buffer* targetBuffer) {
-		pGI->DestroyBuffer(targetBuffer);
-	}
-
 	command_buffer_ptr CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
 		return pGI->CreateCommandBuffer(create_info);
 	}

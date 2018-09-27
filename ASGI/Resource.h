@@ -39,6 +39,30 @@ namespace ASGI {
 		mutable std::atomic<int>   mRefCount = 0;
 	};
 
+	struct Offset2D {
+		int32_t    x;
+		int32_t    y;
+	};
+
+	struct Extent2D {
+		uint32_t    width;
+		uint32_t    height;
+	};
+
+	struct Rect2D {
+		Offset2D    offset;
+		Extent2D    extent;
+	};
+
+	struct Viewport {
+		float    x;
+		float    y;
+		float    width;
+		float    height;
+		float    minDepth;
+		float    maxDepth;
+	};
+
 	class VertexBuffer;
 	class IndexBuffer;
 	class UniformBuffer;

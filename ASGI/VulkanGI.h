@@ -27,7 +27,6 @@ namespace ASGI {
 		void UnMapIndexBuffer(VertexBuffer* pbuffer) override;
 		void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) override;
 		void UnMapUniformBuffer(VertexBuffer* pbuffer) override;
-		void DestroyBuffer(Buffer* targetBuffer) override;
 
 		Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) override;
 		ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel) override;
@@ -54,7 +53,6 @@ namespace ASGI {
 		bool getInstanceLevelExtensions();
 		bool createVKInstance(std::vector<char const *>& desired_extensions);
 		bool createLogicDevice(const char* physic_device_name);
-		int getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties);
 		bool createBuffer(uint64_t size, VkBufferUsageFlags usageFlags, uint32_t createFlags, VKBuffer* pres);
 		bool updateBuffer(VKBuffer* buffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext);
 		bool BeginSingleTimeCommands();

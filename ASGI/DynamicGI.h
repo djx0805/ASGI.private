@@ -29,7 +29,6 @@ namespace ASGI {
 		virtual void UnMapIndexBuffer(VertexBuffer* pbuffer) = 0;
 		virtual void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) = 0;
 		virtual void UnMapUniformBuffer(VertexBuffer* pbuffer) = 0;
-		virtual void DestroyBuffer(Buffer* targetBuffer) = 0;
 		//texture resource
 		virtual Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) = 0;
 		virtual ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel) = 0;

@@ -23,7 +23,6 @@ namespace ASGI {
 	ASGI_API void UnMapIndexBuffer(VertexBuffer* pbuffer);
 	ASGI_API void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE);
 	ASGI_API void UnMapUniformBuffer(VertexBuffer* pbuffer);
-	ASGI_API void DestroyBuffer(Buffer* targetBuffer);
 	//
 	//ASGI_API Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
 

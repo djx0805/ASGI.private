@@ -4,12 +4,12 @@
 #include <array>
 #include <memory>
 #include "ASGI.hpp"
+
 #ifdef _WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 
-#include "VulkanSDK\1.1.77.0\Include\vulkan\vulkan.h"
-
+#include "VulkanMemory.h"
 
 namespace spirv_cross {
 	class Compiler;
@@ -51,10 +51,18 @@ namespace ASGI {
 
 	class VKBuffer {
 		friend class VulkanGI;
-	private:
+	public:
+		~VKBuffer() {
+			VKMemoryManager::Instance()->DestoryBuffer(mVkBuffer, mMemory);
+		}
+	protected:
+		VKBuffer() {
+			mMemory = nullptr;
+		}
+	protected:
 		VkBuffer mVkBuffer;
 		BufferUsageFlags mUsageFlag;
-		void* mAllocation;
+		VKMemory* mMemory;
 	};
 
 	class VKVertexBuffer : public VKBuffer, public VertexBuffer {
@@ -94,17 +102,18 @@ namespace ASGI {
 		friend class VulkanGI;
 	public:
 		~VKImage() {
-			mOrgiView->unref();
+			VKMemoryManager::Instance()->DestoryImage(mVkImage, mMemory);
 		}
 		VKImage2D* asVKImage2D() { return nullptr; }
 	protected:
-		VKImage(){}
+		VKImage(){
+			mMemory = nullptr;
+		}
 	protected:
 	    VkImage mVkImage;
 		ImageUsageFlags mUsageFlag;
-		void* mAllocation;
+		VKMemory* mMemory;
 		VKImageView* mOrgiView;
-		VkImageCreateInfo mImageInfo;
 	};
 
 	class VKImageView : public ImageView {
@@ -115,6 +124,11 @@ namespace ASGI {
 			mImageView = pview;
 			mViewInfo = viewInfo;
 		}
+
+		~VKImageView() {
+			VKMemoryManager::Instance()->DestoryImageView(mImageView);
+		}
+
 		Image* GetSrcImage() override {
 			if (mSrcImage->asImage2D() != nullptr) {
 				return (Image*)mSrcImage->asImage2D();
@@ -123,17 +137,21 @@ namespace ASGI {
 	private:
 		image_ptr mSrcImage;
 		VkImageView mImageView;
-		VkImageViewCreateInfo mViewInfo
+		VkImageViewCreateInfo mViewInfo;
 	};
 
 	class VKImage2D : public VKImage, public Image2D {
 		friend class VulkanGI;
 	public:
-		VKImage2D(Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image2D(format, sizeX, sizeY, numMip) {}
+		VKImage2D(Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image2D(format, sizeX, sizeY, numMip) {
+			mLayoutBarrier.resize(numMip, VKImageLayoutBarrier::Undefined);
+		}
 		//
 		ImageView* GetOrigView() override {
 			return mOrgiView;
 		}
+	private:
+		std::vector<VKImageLayoutBarrier> mLayoutBarrier;
 	};
 
 	class VKImageUpdateContext : public ImageUpdateContext {

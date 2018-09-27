@@ -3,9 +3,6 @@
 
 #include "third_lib\SPIRV-Cross\spirv_cross.hpp"
 
-#define VMA_IMPLEMENTATION
-#include "third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h"
-
 #ifdef _WIN32
 #pragma comment(lib, "VulkanSDK\\1.1.77.0\\Lib\\vulkan-1.lib")
 #endif
@@ -184,16 +181,7 @@ namespace ASGI {
 			return false;
 		}
 		//
-		VmaAllocatorCreateInfo allocatorInfo = {};
-		allocatorInfo.physicalDevice = mVkPhysicalDevice;
-		allocatorInfo.device = mVkLogicDevice;
-		VmaAllocator allocator;
-		if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS) {
-			return false;
-		}
-		mVkMemoryAllocator = allocator;
-		//
-		return true;
+		return VKMemoryManager::Instance()->Init(mVkPhysicalDevice, mVkLogicDevice);
 	}
 
 
@@ -738,47 +726,27 @@ namespace ASGI {
 		return mSwapchain;
 	}
 
-	int VulkanGI::getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties) {
-		for (int type = 0; type < mVkDeviceMemoryProperties.memoryTypeCount; ++type) {
-			if ((typeBits & (1 << type)) &&
-				((mVkDeviceMemoryProperties.memoryTypes[type].propertyFlags & properties) == properties)) {
-				return type;
-			}
-		}
-		//
-		return -1;
-	}
-
 	bool VulkanGI::createBuffer(uint64_t size, VkBufferUsageFlags usageFlags, uint32_t createFlags, VKBuffer* pres) {
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufferInfo.size = size;
 		bufferInfo.usage = usageFlags;
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = (VmaMemoryUsage)createFlags;
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS) {
+		if (VKMemoryManager::Instance()->CreateBuffer(bufferInfo, &pres->mVkBuffer, (VKMemory::MemoryUsage)createFlags, pres->mMemory) != VK_SUCCESS) {
 			return false;
 		}
-		//
-		pres->mVkBuffer = buffer;
-		pres->mAllocation = allocation;
 		//
 		return true;
 	}
 
 	bool VulkanGI::updateBuffer(VKBuffer* buffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		auto vmaAllocation = VmaAllocation(buffer->mAllocation);
-		auto memoryTypeIndex = vmaAllocation->GetMemoryTypeIndex();
-		auto memoryPropertyFlags = mVkDeviceMemoryProperties.memoryTypes[memoryTypeIndex].propertyFlags;
+		auto memoryPropertyFlags = mVkDeviceMemoryProperties.memoryTypes[buffer->mMemory->GetMemoryTypeIndex()].propertyFlags;
 		//
 		if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) {
 			void* pdstData = nullptr;
-			if (vmaMapMemory((VmaAllocator)mVkMemoryAllocator, vmaAllocation, &pdstData) == VK_SUCCESS) {
+			if (VKMemoryManager::Instance()->MapMemory(buffer->mMemory, &pdstData) == VK_SUCCESS) {
 				memcpy(pdstData, pdata, size);
-				vmaUnmapMemory((VmaAllocator)mVkMemoryAllocator, vmaAllocation);
+				VKMemoryManager::Instance()->UnMapMemory(buffer->mMemory);
 				if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0) {
-					vmaFlushAllocation((VmaAllocator)mVkMemoryAllocator, vmaAllocation, offset, size);
+					VKMemoryManager::Instance()->FlushAllocation(buffer->mMemory, offset, size);
 				}
 				//
 				return true;
@@ -801,32 +769,30 @@ namespace ASGI {
 		vbInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		vbInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo vbAllocCreateInfo = {};
-		vbAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		vbAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
 		VkBuffer stagingBuffer = VK_NULL_HANDLE;
-		VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
-		VmaAllocationInfo stagingBufferAllocInfo = {};
-		if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &vbInfo, &vbAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingBufferAllocInfo) != VK_SUCCESS) {
+		VKMemory* pmemory = nullptr;
+		if (VKMemoryManager::Instance()->CreateBuffer(vbInfo, &stagingBuffer, VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_ONLY, pmemory) != VK_SUCCESS) {
 			return false;
 		}
 		//
-		memcpy(stagingBufferAllocInfo.pMappedData, pdata, size);
+		void* pbuffer = nullptr;
+		VKMemoryManager::Instance()->MapMemory(pmemory, &pbuffer);
+		memcpy(pbuffer, pdata, size);
+		VKMemoryManager::Instance()->UnMapMemory(pmemory);
 		//
 		if (!BeginSingleTimeCommands()) {
-			vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, stagingBuffer, stagingBufferAlloc);
+			VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 			return false;
 		}
 		//
 		VkBufferCopy vbCopyRegion = {};
-		vbCopyRegion.srcOffset = offset;
-		vbCopyRegion.dstOffset = stagingBufferAllocInfo.offset;
+		vbCopyRegion.srcOffset = 0;
+		vbCopyRegion.dstOffset = offset;
 		vbCopyRegion.size = size;
 		vkCmdCopyBuffer(mVkTemporaryCommandBuffer, stagingBuffer, buffer->mVkBuffer, 1, &vbCopyRegion);
 		//
 		auto res = EndSingleTimeCommands();
-		vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, stagingBuffer, stagingBufferAlloc);
+		VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 		//
 		return res;
 	}
@@ -858,7 +824,7 @@ namespace ASGI {
 
 	VertexBuffer* VulkanGI::CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
 		auto pres = new  VKVertexBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
 			delete pres;
 			return nullptr;
 		}
@@ -868,7 +834,7 @@ namespace ASGI {
 
 	IndexBuffer* VulkanGI::CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
 		auto pres = new  VKIndexBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
 			delete pres;
 			return nullptr;
 		}
@@ -878,7 +844,7 @@ namespace ASGI {
 
 	UniformBuffer* VulkanGI::CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
 		auto pres = new  VKUniformBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, pres)) {
+		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
 			delete pres;
 			return nullptr;
 		}
@@ -900,23 +866,20 @@ namespace ASGI {
 			vbInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			vbInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VmaAllocationCreateInfo vbAllocCreateInfo = {};
-			vbAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-			vbAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
 			VkBuffer stagingBuffer = VK_NULL_HANDLE;
-			VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
-			VmaAllocationInfo stagingBufferAllocInfo = {};
-			if (vmaCreateBuffer((VmaAllocator)mVkMemoryAllocator, &vbInfo, &vbAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingBufferAllocInfo) != VK_SUCCESS) {
+			VKMemory* pmemory = nullptr;
+			if (VKMemoryManager::Instance()->CreateBuffer(vbInfo, &stagingBuffer, VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_ONLY, pmemory) != VK_SUCCESS) {
 				continue;
 			}
 			//
-			memcpy(stagingBufferAllocInfo.pMappedData, itm.pdata, itm.size);
+			void* pbuffer = nullptr;
+			VKMemoryManager::Instance()->MapMemory(pmemory, &pbuffer);
+			memcpy(pbuffer, itm.pdata, itm.size);
+			VKMemoryManager::Instance()->UnMapMemory(pmemory);
 			//
-			std::array<void*, 3> tmp = { itm.dstBuffer, stagingBuffer, stagingBufferAlloc };
 			copys[index][0] = itm.dstBuffer;
 			copys[index][1] = stagingBuffer;
-			copys[index][2] = stagingBufferAlloc;
+			copys[index][2] = pmemory;
 			++index;
 		}
 		//
@@ -926,16 +889,17 @@ namespace ASGI {
 		//
 		for (auto & itm : copys) {
 			VkBufferCopy vbCopyRegion = {};
-			vbCopyRegion.srcOffset = ((VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation)->GetOffset();
-			vbCopyRegion.dstOffset = ((VmaAllocation)itm[2])->GetOffset();
-			vbCopyRegion.size = ((VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation)->GetSize();
+			vbCopyRegion.srcOffset = 0;
+			vbCopyRegion.dstOffset = ((VKBuffer*)itm[0])->mMemory->GetOffset();
+			vbCopyRegion.size = ((VKBuffer*)itm[0])->mMemory->GetSize();
 			vkCmdCopyBuffer(mVkTemporaryCommandBuffer, (VkBuffer)itm[1], ((VKBuffer*)(itm[0]))->mVkBuffer, 1, &vbCopyRegion);
 		}
 		//
 		auto res = EndSingleTimeCommands();
 		//
 		for (auto & itm : copys) {
-			vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, (VkBuffer)itm[1], (VmaAllocation)((VKBuffer*)(itm[0]))->mAllocation);
+			VKMemory* pmemory = (VKMemory*)std::move(itm[2]);
+			VKMemoryManager::Instance()->DestoryBuffer((VkBuffer)itm[1], pmemory);
 		}
 		//
 		return res;
@@ -976,21 +940,6 @@ namespace ASGI {
 
 	}
 
-	void VulkanGI::DestroyBuffer(Buffer* targetBuffer) {
-		VKBuffer* pbuffer = nullptr;
-		if (targetBuffer->asVertexBuffer() != nullptr) {
-			pbuffer = (VKBuffer*)((VKVertexBuffer*)targetBuffer->asVertexBuffer());
-		}
-		if (targetBuffer->asIndexBuffer() != nullptr) {
-			pbuffer = (VKBuffer*)((VKIndexBuffer*)targetBuffer->asIndexBuffer());
-		}
-		if (targetBuffer->asUniformBuffer() != nullptr) {
-			pbuffer = (VKBuffer*)((VKUniformBuffer*)targetBuffer->asUniformBuffer());
-		}
-		//
-		vmaDestroyBuffer((VmaAllocator)mVkMemoryAllocator, pbuffer->mVkBuffer, (VmaAllocation)pbuffer->mAllocation);
-	}
-
 	VkImageAspectFlags getImageAspectFlags(Format format, ImageUsageFlags usageFlags) {
 		if ((usageFlags & ImageUsageFlagBits::IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0) {
 			switch (format)
@@ -1010,72 +959,6 @@ namespace ASGI {
 		//
 		return VK_IMAGE_ASPECT_COLOR_BIT;
 	}
-	inline VkPipelineStageFlags GetImageBarrierFlags(EImageLayoutBarrier Target, VkAccessFlags& AccessFlags, VkImageLayout& Layout)
-	{
-		VkPipelineStageFlags StageFlags = (VkPipelineStageFlags)0;
-		switch (Target)
-		{
-		case EImageLayoutBarrier::Undefined:
-			AccessFlags = 0;
-			StageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			Layout = VK_IMAGE_LAYOUT_UNDEFINED;
-			break;
-
-		case EImageLayoutBarrier::TransferDest:
-			AccessFlags = VK_ACCESS_TRANSFER_WRITE_BIT;
-			StageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			Layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::ColorAttachment:
-			AccessFlags = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			StageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::DepthStencilAttachment:
-			AccessFlags = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			StageFlags = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-			Layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::TransferSource:
-			AccessFlags = VK_ACCESS_TRANSFER_READ_BIT;
-			StageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
-			Layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::Present:
-			AccessFlags = 0;
-			StageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-			Layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-			break;
-
-		case EImageLayoutBarrier::PixelShaderRead:
-			AccessFlags = VK_ACCESS_SHADER_READ_BIT;
-			StageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			Layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::PixelDepthStencilRead:
-			AccessFlags = VK_ACCESS_SHADER_READ_BIT;
-			StageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			Layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-			break;
-
-		case EImageLayoutBarrier::ComputeGeneralRW:
-			AccessFlags = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-			StageFlags = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-			Layout = VK_IMAGE_LAYOUT_GENERAL;
-			break;
-
-		default:
-			checkf(0, TEXT("Unknown ImageLayoutBarrier %d"), (int32)Target);
-			break;
-		}
-
-		return StageFlags;
-	}
 	Image2D* VulkanGI::CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1091,11 +974,10 @@ namespace ASGI {
 		imageCreateInfo.extent = { sizeX, sizeY, 1 };
 		imageCreateInfo.usage = (usageFlags<< 2) | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-		VmaAllocationCreateInfo imageAllocCreateInfo = {};
-		imageAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		VmaAllocation imageAlloc;
+		
 		VkImage vkImage;
-		if (vmaCreateImage((VmaAllocator)mVkMemoryAllocator, &imageCreateInfo, &imageAllocCreateInfo, &vkImage, &imageAlloc, nullptr) != VK_SUCCESS) {
+		VKMemory* pmemory = nullptr;
+		if (VKMemoryManager::Instance()->CreateImage(imageCreateInfo, &vkImage, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pmemory) != VK_SUCCESS) {
 			return nullptr;
 		}
 		//
@@ -1109,16 +991,15 @@ namespace ASGI {
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
 		VkImageView imageView;
-		if (vkCreateImageView(mVkLogicDevice, &imageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
-			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, vkImage, imageAlloc);
+		if (VKMemoryManager::Instance()->CreateImageView(imageViewInfo, &imageView) != VK_SUCCESS) {
+			VKMemoryManager::Instance()->DestoryImage(vkImage, pmemory);
 			return nullptr;
 		}
 		//
 		auto pres = new VKImage2D(format, sizeX, sizeY, numMips);
 		pres->mVkImage = vkImage;
-		pres->mAllocation = imageAlloc;
+		pres->mMemory = pmemory;
 		pres->mUsageFlag = usageFlags;
-		pres->mImageInfo = imageCreateInfo;
 		pres->mOrgiView = new VKImageView(pres, imageView, imageViewInfo);
 		//
 		return pres;
@@ -1146,119 +1027,107 @@ namespace ASGI {
 
 		}
 		//
-		VkImageCreateInfo stagingImageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-		stagingImageInfo.imageType = VK_IMAGE_TYPE_2D;
-		stagingImageInfo.extent.width = sizeX;
-		stagingImageInfo.extent.height = sizeY;
-		stagingImageInfo.extent.depth = 1;
-		stagingImageInfo.mipLevels = 1;
-		stagingImageInfo.arrayLayers = 1;
-		stagingImageInfo.format = (VkFormat)pimg->GetFormat();
-		stagingImageInfo.tiling = VK_IMAGE_TILING_LINEAR;
-		stagingImageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-		stagingImageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		stagingImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		stagingImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		stagingImageInfo.flags = 0;
+		VkBufferCreateInfo vbInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		vbInfo.size = sizeX*sizeY*GetFormatSize(pimg->GetFormat());
+		vbInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		vbInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo stagingImageAllocCreateInfo = {};
-		stagingImageAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		stagingImageAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-		VkImage stagingImage = VK_NULL_HANDLE;
-		VmaAllocation stagingImageAlloc = VK_NULL_HANDLE;
-		VmaAllocationInfo stagingImageAllocInfo = {};
-		if (vmaCreateImage((VmaAllocator)mVkMemoryAllocator, &stagingImageInfo, &stagingImageAllocCreateInfo, &stagingImage, &stagingImageAlloc, &stagingImageAllocInfo)) {
+		VkBuffer stagingBuffer = VK_NULL_HANDLE;
+		VKMemory* pmemory = nullptr;
+		if (VKMemoryManager::Instance()->CreateBuffer(vbInfo, &stagingBuffer, VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_ONLY, pmemory) != VK_SUCCESS) {
 			return false;
 		}
 		//
-		auto aspectMask = ((VKImageView*)pimg->GetOrigView())->mViewInfo.subresourceRange.aspectMask;
-		//
-		VkImageSubresource imageSubresource = {};
-		imageSubresource.aspectMask = aspectMask;
-		imageSubresource.mipLevel = 0;
-		imageSubresource.arrayLayer = 0;
-
-		VkSubresourceLayout imageLayout = {};
-		vkGetImageSubresourceLayout(mVkLogicDevice, stagingImage, &imageSubresource, &imageLayout);
-
-		char* const pMipLevelData = (char*)stagingImageAllocInfo.pMappedData + imageLayout.offset;
-		uint8_t* pRowData = (uint8_t*)pMipLevelData;
-		memcpy(pRowData, pdata, imageLayout.size);
+		void* pbuffer = nullptr;
+		VKMemoryManager::Instance()->MapMemory(pmemory, &pbuffer);
+		memcpy(pbuffer, pdata, vbInfo.size);
+		VKMemoryManager::Instance()->UnMapMemory(pmemory);
 		//
 		if (!BeginSingleTimeCommands()) {
-			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+			VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 			return false;
 		}
 		//
-		VkImageMemoryBarrier imgMemBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-		imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-		imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		imgMemBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imgMemBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imgMemBarrier.image = stagingImage;
-		imgMemBarrier.subresourceRange.aspectMask = aspectMask;
-		imgMemBarrier.subresourceRange.baseMipLevel = 0;
-		imgMemBarrier.subresourceRange.levelCount = 1;
-		imgMemBarrier.subresourceRange.baseArrayLayer = 0;
-		imgMemBarrier.subresourceRange.layerCount = 1;
-		imgMemBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-		imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		VkBufferImageCopy bufferCopyRegion = {};
+		bufferCopyRegion.imageSubresource.aspectMask = ((VKImageView*)(pimg->GetOrigView()))->mViewInfo.subresourceRange.aspectMask;
+		bufferCopyRegion.imageSubresource.mipLevel = level;
+		bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+		bufferCopyRegion.imageSubresource.layerCount = 1;
+		bufferCopyRegion.imageExtent.width = sizeX;
+		bufferCopyRegion.imageExtent.height = sizeY;
+		bufferCopyRegion.imageExtent.depth = 1;
+		bufferCopyRegion.bufferOffset = 0;
+		//
+		VkImageSubresourceRange subresourceRange = {};
+		// Image only contains color data
+		subresourceRange.aspectMask = ((VKImageView*)(pimg->GetOrigView()))->mViewInfo.subresourceRange.aspectMask;
+		// Start at first mip level
+		subresourceRange.baseMipLevel = level;
+		// We will transition on all mip levels
+		subresourceRange.levelCount = 1;
+		// The 2D texture only has one layer
+		subresourceRange.layerCount = 1;
 
+		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
+		VkImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.image = ((VKImage2D*)pimg)->mVkImage;
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+		// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
+		// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(
 			mVkTemporaryCommandBuffer,
-			VK_PIPELINE_STAGE_HOST_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			GetImageBarrierFlags(((VKImage2D*)pimg)->mLayoutBarrier[level], imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
+			GetImageBarrierFlags(VKImageLayoutBarrier::TransferDest, imageMemoryBarrier.dstAccessMask, imageMemoryBarrier.newLayout),
 			0,
 			0, nullptr,
 			0, nullptr,
-			1, &imgMemBarrier);
+			1, &imageMemoryBarrier);
+		//
+		((VKImage2D*)pimg)->mLayoutBarrier[level] = VKImageLayoutBarrier::TransferDest;
+		//
+		vkCmdCopyBufferToImage(
+			mVkTemporaryCommandBuffer,
+			stagingBuffer,
+			((VKImage2D*)pimg)->mVkImage,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1,
+			&bufferCopyRegion);
+		//
+		imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-		imgMemBarrier.oldLayout = ((VKImage2D*)pimg)->mImageInfo.initialLayout;
-		imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		imgMemBarrier.image = ((VKImage2D*)pimg->asImage2D())->mVkImage;
-		imgMemBarrier.srcAccessMask = 0;
-		imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
+		VkPipelineStageFlags stageFlags = 0;
+		if ((bufferCopyRegion.imageSubresource.aspectMask & VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT) != 0) {
+			stageFlags = GetImageBarrierFlags(VKImageLayoutBarrier::PixelShaderRead, imageMemoryBarrier.dstAccessMask, imageMemoryBarrier.newLayout);
+			((VKImage2D*)pimg)->mLayoutBarrier[level] = VKImageLayoutBarrier::PixelShaderRead;
+		}
+		else if ((bufferCopyRegion.imageSubresource.aspectMask & VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT) != 0 ||
+			(bufferCopyRegion.imageSubresource.aspectMask & VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT) != 0) {
+			stageFlags = GetImageBarrierFlags(VKImageLayoutBarrier::DepthStencilAttachment, imageMemoryBarrier.dstAccessMask, imageMemoryBarrier.newLayout);
+			((VKImage2D*)pimg)->mLayoutBarrier[level] = VKImageLayoutBarrier::PixelDepthStencilRead;
+		}
 		vkCmdPipelineBarrier(
 			mVkTemporaryCommandBuffer,
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			GetImageBarrierFlags(((VKImage2D*)pimg)->mLayoutBarrier[level], imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
+			stageFlags,
 			0,
 			0, nullptr,
 			0, nullptr,
-			1, &imgMemBarrier);
-
-		VkImageCopy imageCopy = {};
-		imageCopy.srcSubresource.aspectMask = aspectMask;
-		imageCopy.srcSubresource.baseArrayLayer = 0;
-		imageCopy.srcSubresource.mipLevel = 0;
-		imageCopy.srcSubresource.layerCount = 1;
-		imageCopy.dstSubresource.aspectMask = aspectMask;
-		imageCopy.dstSubresource.baseArrayLayer = 0;
-		imageCopy.dstSubresource.mipLevel = 0;
-		imageCopy.dstSubresource.layerCount = 1;
-		imageCopy.srcOffset.x = 0;
-		imageCopy.srcOffset.y = 0;
-		imageCopy.srcOffset.z = 0;
-		imageCopy.dstOffset.x = offsetX;
-		imageCopy.dstOffset.y = offsetY;
-		imageCopy.dstOffset.z = 0;
-		imageCopy.extent.width = sizeX;
-		imageCopy.extent.height = sizeY;
-		imageCopy.extent.depth = 1;
-		vkCmdCopyImage(
-			mVkTemporaryCommandBuffer,
-			stagingImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			((VKImage2D*)pimg->asImage2D())->mVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			1, &imageCopy);
+			1, &imageMemoryBarrier);
 		//
 		if (!EndSingleTimeCommands()) {
-			vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+			VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 			return false;
 		}
 		//
-		vmaDestroyImage((VmaAllocator)mVkMemoryAllocator, stagingImage, stagingImageAlloc);
+		VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 		return true;
 	}
 
