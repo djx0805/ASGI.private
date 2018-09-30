@@ -5,6 +5,7 @@
 
 namespace ASGI {
 	class Resource {
+		template<class T> friend class ref_ptr;
 	public:
 		inline int ref() const
 		{
@@ -63,36 +64,18 @@ namespace ASGI {
 		float    maxDepth;
 	};
 
-	class VertexBuffer;
-	class IndexBuffer;
-	class UniformBuffer;
 	class Buffer : public Resource {
 	public:
-			virtual ~Buffer() {};
-			//
-			virtual VertexBuffer* asVertexBuffer() { return nullptr; }
-			virtual IndexBuffer* asIndexBuffer() { return nullptr; }
-			virtual UniformBuffer* asUniformBuffer() { return nullptr; }
+		Buffer(BufferUsageFlags usageFlags) {
+			mUsageFlags = usageFlags;
+		}
+		virtual ~Buffer() {};
+		//
+		inline BufferUsageFlags GetUsageFlags() { return mUsageFlags; }
+	protected:
+		BufferUsageFlags mUsageFlags;
 	};
 	typedef ref_ptr<Buffer> buffer_ptr;
-
-	class VertexBuffer : public Buffer {
-	public:
-		virtual VertexBuffer* asVertexBuffer() { return this; }
-	};
-	typedef ref_ptr<VertexBuffer> vertex_buffer_ptr;
-
-	class IndexBuffer : public Buffer {
-	public:
-		virtual IndexBuffer* asIndexBuffer() { return this; }
-	};
-	typedef ref_ptr<IndexBuffer> index_buffer_ptr;
-
-	class UniformBuffer : public Buffer {
-	public:
-		virtual UniformBuffer* asUniformBuffer() { return this; }
-	};
-	typedef ref_ptr<UniformBuffer> uniform_buffer_ptr;
 
 	class BufferUpdateContext : public Resource {
 	public:
@@ -100,7 +83,6 @@ namespace ASGI {
 	};
 	typedef ref_ptr<BufferUpdateContext> buffer_update_contex_ptr;
 
-	
 
 	class ImageView;
 	class Image2D;
@@ -156,10 +138,32 @@ namespace ASGI {
 	};
 	typedef ref_ptr<ImageView> image_view_ptr;
 
-	class CommandBuffer : public Resource {
+
+	class CommandPool : public Resource {
+	public:
 
 	};
+
+	class ExcuteQueue : public Resource {
+	public:
+		virtual ~ExcuteQueue() {}
+	};
+
+	class CommandBuffer : public Resource {
+	public:
+		virtual ~CommandBuffer() {}
+	};
 	typedef ref_ptr<CommandBuffer> command_buffer_ptr;
+
+	class Semaphore : public Resource {
+	public:
+		virtual ~Semaphore() {}
+	};
+
+	class Fence : public Resource {
+	public:
+		virtual ~Fence() {}
+	};
 
 	class ShaderModule : public Resource {
 	public:

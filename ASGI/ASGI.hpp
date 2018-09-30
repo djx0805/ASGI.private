@@ -6,14 +6,13 @@
 #define ASGI_API __declspec(dllimport)
 #endif
 
-#include <vector>
+#include <vector> 
 #include "Resource.h"
 
 namespace ASGI {
 	extern ASGI_API bool GSupportParallelCommandBuffer;
 
 	
-
 	struct ShaderModuleCreateInfo {
 		const char* path;
 		uint32_t codeSize;

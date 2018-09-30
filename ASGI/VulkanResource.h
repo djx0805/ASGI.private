@@ -49,38 +49,19 @@ namespace ASGI {
 		VkPipeline mVkPipeLine;
 	};
 
-	class VKBuffer {
+	class VKBuffer : public Buffer{
 		friend class VulkanGI;
 	public:
 		~VKBuffer() {
 			VKMemoryManager::Instance()->DestoryBuffer(mVkBuffer, mMemory);
 		}
 	protected:
-		VKBuffer() {
+		VKBuffer(BufferUsageFlags usageFlags) : Buffer(usageFlags) {
 			mMemory = nullptr;
 		}
 	protected:
 		VkBuffer mVkBuffer;
-		BufferUsageFlags mUsageFlag;
 		VKMemory* mMemory;
-	};
-
-	class VKVertexBuffer : public VKBuffer, public VertexBuffer {
-		friend class VulkanGI;
-	private:
-		
-	};
-
-	class VKIndexBuffer : public VKBuffer, public IndexBuffer {
-		friend class VulkanGI;
-	private:
-	
-	};
-
-	class VKUniformBuffer : public VKBuffer, public UniformBuffer {
-		friend class VulkanGI;
-	private:
-		
 	};
 
 	class VKBufferUpdateContext : public BufferUpdateContext {

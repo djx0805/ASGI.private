@@ -162,16 +162,8 @@ namespace ASGI {
 		return pGI->CreateSwapchain(create_info);
 	}
 
-	vertex_buffer_ptr CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
-		return pGI->CreateVertexBuffer(size, usageFlags);
-	}
-
-	index_buffer_ptr CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
-		return pGI->CreateIndexBuffer(size, usageFlags);
-	}
-
-	uniform_buffer_ptr CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
-		return pGI->CreateUniformBuffer(size, usageFlags);
+	buffer_ptr CreateBuffer(uint64_t size, BufferUsageFlags usageFlags) {
+		return pGI->CreateBuffer(size, usageFlags);
 	}
 
 	buffer_update_contex_ptr BeginUpdateBuffer() {
@@ -182,42 +174,19 @@ namespace ASGI {
 		return pGI->EndUpdateBuffer(pUpdateContext);
 	}
 
-	void UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		pGI->UpdateVertexBuffer(pbuffer, offset, size, pdata, pUpdateContext);
+	void UpdateBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+		pGI->UpdateBuffer(pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
-	void UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		pGI->UpdateIndexBuffer(pbuffer, offset, size, pdata, pUpdateContext);
-	}
-
-	void UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		pGI->UpdateUniformBuffer(pbuffer, offset, size, pdata, pUpdateContext);
-	}
-
-	void* MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+	void* MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
 		return nullptr;
 	}
 
-	void UnMapVertexBuffer(VertexBuffer* pbuffer) {
+	void UnMapBuffer(Buffer* pbuffer) {
 	}
 
-	void* MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
-		return nullptr;
-	}
-
-	void UnMapIndexBuffer(VertexBuffer* pbuffer) {
-	}
-
-	void* MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
-		return nullptr;
-	}
-
-	void UnMapUniformBuffer(VertexBuffer* pbuffer) {
-
-	}
-
-	command_buffer_ptr CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
-		return pGI->CreateCommandBuffer(create_info);
+	command_buffer_ptr AcquireCommandBuffer(const CommandBufferCreateInfo& create_info) {
+		return pGI->AcquireCommandBuffer(create_info);
 	}
 
 	void CmdSetViewport(CommandBuffer& commandBuffer) {

@@ -94,65 +94,11 @@ namespace ASGI {
 		mVkDeviceExtensions.resize(extensions_count);
 		result = vkEnumerateDeviceExtensionProperties(mVkPhysicalDevice, nullptr, &extensions_count, &mVkDeviceExtensions[0]);
 		//
-		uint32_t queue_families_count = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(mVkPhysicalDevice, &queue_families_count, nullptr);
-		if (queue_families_count == 0) {
-			return false;
-		}
-		std::vector<VkQueueFamilyProperties> queue_families;
-		queue_families.resize(queue_families_count);
-		vkGetPhysicalDeviceQueueFamilyProperties(mVkPhysicalDevice, &queue_families_count, &queue_families[0]);
-		//
-		int queueFamilyIndex = -1;
-		for (int i = 0; i < queue_families.size(); ++i) {
-#ifdef _WIN32
-			if ((queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && vkGetPhysicalDeviceWin32PresentationSupportKHR(mVkPhysicalDevice, i)) {
-				queueFamilyIndex = i;
-				break;
-			}
-#endif
-		}
-		//
-		if (queueFamilyIndex < 0) {
-			return false;
-		}
-		//
-		VkDeviceQueueCreateInfo graphics_queue_create_info = {
-			VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			nullptr,
-			0,
-			queueFamilyIndex,
-			1,
-			nullptr
-		};
-		//
 		vkGetPhysicalDeviceMemoryProperties(mVkPhysicalDevice, &mVkDeviceMemoryProperties);
 		//
-		std::vector<char const *> desired_extensions;
-		desired_extensions.push_back("VK_KHR_swapchain");
-		VkPhysicalDeviceFeatures desired_features;
-		memset(&desired_features, 0, sizeof(VkPhysicalDeviceFeatures));
-		desired_features.tessellationShader = VK_TRUE;
-		desired_features.geometryShader = VK_TRUE;
-		VkDeviceCreateInfo device_create_info = {
-			VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-			nullptr,
-			0,
-			1,
-			&graphics_queue_create_info,
-			0,
-			nullptr,
-			static_cast<uint32_t>(desired_extensions.size()),
-			desired_extensions.size() > 0 ? &desired_extensions[0] : nullptr,
-			&desired_features
-		};
-		//
-		result = vkCreateDevice(mVkPhysicalDevice, &device_create_info, nullptr, &mVkLogicDevice);
-		if ((result != VK_SUCCESS) || (mVkLogicDevice == VK_NULL_HANDLE)) {
+		if (!mLogicDevice.Init(mVkPhysicalDevice)) {
 			return false;
 		}
-		//
-		vkGetDeviceQueue(mVkLogicDevice, 0, 0, &mVkGraphicsQueue);
 		//
 		return true;
 	}
@@ -181,7 +127,7 @@ namespace ASGI {
 			return false;
 		}
 		//
-		return VKMemoryManager::Instance()->Init(mVkPhysicalDevice, mVkLogicDevice);
+		return VKMemoryManager::Instance()->Init(mVkPhysicalDevice, mLogicDevice.GetDevice());
 	}
 
 
@@ -218,7 +164,7 @@ namespace ASGI {
 		shader_module_create_info.flags = 0;
 		shader_module_create_info.codeSize = buffer.size() * sizeof(uint32_t);
 		shader_module_create_info.pCode = (const uint32_t*)(buffer.data());
-		if (vkCreateShaderModule(mVkLogicDevice, &shader_module_create_info, nullptr, &psm->mShaderModule) != VkResult::VK_SUCCESS)
+		if (vkCreateShaderModule(mLogicDevice.GetDevice(), &shader_module_create_info, nullptr, &psm->mShaderModule) != VkResult::VK_SUCCESS)
 		{
 			delete psm;
 			return nullptr;
@@ -305,7 +251,7 @@ namespace ASGI {
 		renderPassInfo.pDependencies = dependencies.data();
 		//
 		VkRenderPass renderPass;
-		if (vkCreateRenderPass(mVkLogicDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+		if (vkCreateRenderPass(mLogicDevice.GetDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
 			return nullptr;
 		}
 		//
@@ -543,7 +489,7 @@ namespace ASGI {
 			descriptorSetLayoutCreateInfo.pBindings = dsb.second.data();
 			descriptorSetLayoutCreateInfo.bindingCount = dsb.second.size();
 
-			if (vkCreateDescriptorSetLayout(mVkLogicDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[dsb.first]) != VK_SUCCESS) {
+			if (vkCreateDescriptorSetLayout(mLogicDevice.GetDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[dsb.first]) != VK_SUCCESS) {
 				return nullptr;
 			}
 		}
@@ -555,7 +501,7 @@ namespace ASGI {
 		pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 		pipelineLayoutCreateInfo.pushConstantRangeCount = pushConstantRanges.size();
 		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
-		if (vkCreatePipelineLayout(mVkLogicDevice, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(mLogicDevice.GetDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 			return nullptr;
 		}
 		//
@@ -580,7 +526,7 @@ namespace ASGI {
 		pipelineCreateInfo.pStages = shaderStages.data();
 		//
 		VkPipeline graphicsPipeline;
-		if (vkCreateGraphicsPipelines(mVkLogicDevice, nullptr, 1, &pipelineCreateInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(mLogicDevice.GetDevice(), nullptr, 1, &pipelineCreateInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 			return nullptr;
 		}
 		//
@@ -718,7 +664,7 @@ namespace ASGI {
 		if (mSwapchain->mVkSurfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
 			swapchain_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
-		result = vkCreateSwapchainKHR(mVkLogicDevice, &swapchain_create_info, nullptr, &mSwapchain->mVkSwapchain);
+		result = vkCreateSwapchainKHR(mLogicDevice.GetDevice(), &swapchain_create_info, nullptr, &mSwapchain->mVkSwapchain);
 		if (result != VK_SUCCESS) {
 			return nullptr;
 		}
@@ -726,11 +672,25 @@ namespace ASGI {
 		return mSwapchain;
 	}
 
-	bool VulkanGI::createBuffer(uint64_t size, VkBufferUsageFlags usageFlags, uint32_t createFlags, VKBuffer* pres) {
+	bool VulkanGI::createBuffer(uint64_t size, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VKBuffer* pres) {
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufferInfo.size = size;
 		bufferInfo.usage = usageFlags;
-		if (VKMemoryManager::Instance()->CreateBuffer(bufferInfo, &pres->mVkBuffer, (VKMemory::MemoryUsage)createFlags, pres->mMemory) != VK_SUCCESS) {
+		VKMemory::MemoryUsage memoryUsage;
+		if (memoryPropertyFlags == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY;
+		}
+		else if(memoryPropertyFlags == (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_ONLY;
+		}
+		else if (memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_TO_CPU;
+		}
+		else {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_TO_GPU;
+		}
+		//
+		if (VKMemoryManager::Instance()->CreateBuffer(bufferInfo, &pres->mVkBuffer, memoryUsage, pres->mMemory) != VK_SUCCESS) {
 			return false;
 		}
 		//
@@ -789,7 +749,7 @@ namespace ASGI {
 		vbCopyRegion.srcOffset = 0;
 		vbCopyRegion.dstOffset = offset;
 		vbCopyRegion.size = size;
-		vkCmdCopyBuffer(mVkTemporaryCommandBuffer, stagingBuffer, buffer->mVkBuffer, 1, &vbCopyRegion);
+		vkCmdCopyBuffer(mVkUploadCmdBuffer, stagingBuffer, buffer->mVkBuffer, 1, &vbCopyRegion);
 		//
 		auto res = EndSingleTimeCommands();
 		VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
@@ -800,7 +760,7 @@ namespace ASGI {
 	bool VulkanGI::BeginSingleTimeCommands() {
 		VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		if (vkBeginCommandBuffer(mVkTemporaryCommandBuffer, &cmdBufBeginInfo) == VK_SUCCESS) {
+		if (vkBeginCommandBuffer(mVkUploadCmdBuffer, &cmdBufBeginInfo) == VK_SUCCESS) {
 			return true;
 		}
 		//
@@ -808,43 +768,45 @@ namespace ASGI {
 	}
 
 	bool VulkanGI::EndSingleTimeCommands() {
-		vkEndCommandBuffer(mVkTemporaryCommandBuffer);
-
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &mVkTemporaryCommandBuffer;
-
-		if (vkQueueSubmit(mVkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS &&
-			vkQueueWaitIdle(mVkGraphicsQueue) != VK_SUCCESS) {
+		vkEndCommandBuffer(mVkUploadCmdBuffer);
+		//
+		if (mLogicDevice.ExcuteCmdsOnIdleGraphicsQueue(&mVkUploadCmdBuffer, true) != VK_SUCCESS) {
 			return false;
 		}
 		//
 		return true;
 	}
 
-	VertexBuffer* VulkanGI::CreateVertexBuffer(uint64_t size, BufferUsageFlags usageFlags) {
-		auto pres = new  VKVertexBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
-			delete pres;
-			return nullptr;
+	Buffer* VulkanGI::CreateBuffer(uint64_t size, BufferUsageFlags usageFlags) {
+		auto pres = new  VKBuffer(usageFlags);
+		VkBufferUsageFlags bufferUsageFlags = 0;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_SRC_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		if(usageFlags & BufferUsageFlagBits::BUFFER_USAGE_INDEX_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_INDIRECT_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_STORAGE_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_STORAGE_TEXEL_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_UNIFORM_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_UNIFORM_TEXEL_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_VERTEX_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		//
+		VkMemoryPropertyFlags memoryPropertyFlags = 0;
+		usageFlags &= ~BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_SRC_BIT;
+		usageFlags &= ~BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT;
+		if (usageFlags == BufferUsageFlagBits::BUFFER_USAGE_UPLOAD) {
+			memoryPropertyFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		}
+		else if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_UPLOAD) {
+			memoryPropertyFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		}
+		else if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_READBACK) {
+			memoryPropertyFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+		}
+		else {
+			memoryPropertyFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		}
 		//
-		return pres;
-	}
-
-	IndexBuffer* VulkanGI::CreateIndexBuffer(uint32_t size, BufferUsageFlags usageFlags) {
-		auto pres = new  VKIndexBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
-			delete pres;
-			return nullptr;
-		}
-		//
-		return pres;
-	}
-
-	UniformBuffer* VulkanGI::CreateUniformBuffer(uint32_t size, BufferUsageFlags usageFlags) {
-		auto pres = new  VKUniformBuffer();
-		if (!createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pres)) {
+		if (!createBuffer(size, bufferUsageFlags, memoryPropertyFlags, pres)) {
 			delete pres;
 			return nullptr;
 		}
@@ -892,7 +854,7 @@ namespace ASGI {
 			vbCopyRegion.srcOffset = 0;
 			vbCopyRegion.dstOffset = ((VKBuffer*)itm[0])->mMemory->GetOffset();
 			vbCopyRegion.size = ((VKBuffer*)itm[0])->mMemory->GetSize();
-			vkCmdCopyBuffer(mVkTemporaryCommandBuffer, (VkBuffer)itm[1], ((VKBuffer*)(itm[0]))->mVkBuffer, 1, &vbCopyRegion);
+			vkCmdCopyBuffer(mVkUploadCmdBuffer, (VkBuffer)itm[1], ((VKBuffer*)(itm[0]))->mVkBuffer, 1, &vbCopyRegion);
 		}
 		//
 		auto res = EndSingleTimeCommands();
@@ -905,39 +867,15 @@ namespace ASGI {
 		return res;
 	}
 
-	void VulkanGI::UpdateVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
+	void VulkanGI::UpdateBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
 		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
-	void VulkanGI::UpdateIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
-	}
-
-	void VulkanGI::UpdateUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		updateBuffer((VKBuffer*)pbuffer, offset, size, pdata, pUpdateContext);
-	}
-
-	void* VulkanGI::MapVertexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
+	void* VulkanGI::MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
 		return nullptr;
 	}
 
-	void VulkanGI::UnMapVertexBuffer(VertexBuffer* pbuffer) {
-	}
-
-	void* VulkanGI::MapIndexBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
-		return nullptr;
-	}
-
-	void VulkanGI::UnMapIndexBuffer(VertexBuffer* pbuffer) {
-
-	}
-
-	void* VulkanGI::MapUniformBuffer(VertexBuffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
-		return nullptr;
-	}
-
-	void VulkanGI::UnMapUniformBuffer(VertexBuffer* pbuffer) {
-
+	void VulkanGI::UnMapBuffer(Buffer* pbuffer) {
 	}
 
 	VkImageAspectFlags getImageAspectFlags(Format format, ImageUsageFlags usageFlags) {
@@ -960,6 +898,16 @@ namespace ASGI {
 		return VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 	Image2D* VulkanGI::CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
+		VkImageUsageFlags imageUsageFlags = 0;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_SRC_BIT) imageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_DST_BIT) imageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_COLOR_ATTACHMENT_BIT) imageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) imageUsageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_INPUT_ATTACHMENT_BIT) imageUsageFlags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_SAMPLED_BIT) imageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_STORAGE_BIT) imageUsageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+		if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) imageUsageFlags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+		//
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.pNext = NULL;
@@ -972,12 +920,27 @@ namespace ASGI {
 		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_GENERAL;
 		imageCreateInfo.extent = { sizeX, sizeY, 1 };
-		imageCreateInfo.usage = (usageFlags<< 2) | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageCreateInfo.usage = imageUsageFlags;
 
 		
 		VkImage vkImage;
 		VKMemory* pmemory = nullptr;
-		if (VKMemoryManager::Instance()->CreateImage(imageCreateInfo, &vkImage, VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY, pmemory) != VK_SUCCESS) {
+		VKMemory::MemoryUsage memoryUsage;
+		usageFlags &= ~ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_DST_BIT;
+		usageFlags &= ~ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_SRC_BIT;
+		if (usageFlags == ImageUsageFlagBits::IMAGE_USAGE_UPLOAD) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_ONLY;
+		}
+		else if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_UPLOAD) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_CPU_TO_GPU;
+		}
+		else if (usageFlags & ImageUsageFlagBits::IMAGE_USAGE_READBACK) {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_TO_CPU;
+		}
+		else {
+			memoryUsage = VKMemory::MemoryUsage::VK_MEMORY_USAGE_GPU_ONLY;
+		}
+		if (VKMemoryManager::Instance()->CreateImage(imageCreateInfo, &vkImage, memoryUsage, pmemory) != VK_SUCCESS) {
 			return nullptr;
 		}
 		//
@@ -1080,7 +1043,7 @@ namespace ASGI {
 		// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 		// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(
-			mVkTemporaryCommandBuffer,
+			mVkUploadCmdBuffer,
 			GetImageBarrierFlags(((VKImage2D*)pimg)->mLayoutBarrier[level], imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
 			GetImageBarrierFlags(VKImageLayoutBarrier::TransferDest, imageMemoryBarrier.dstAccessMask, imageMemoryBarrier.newLayout),
 			0,
@@ -1091,7 +1054,7 @@ namespace ASGI {
 		((VKImage2D*)pimg)->mLayoutBarrier[level] = VKImageLayoutBarrier::TransferDest;
 		//
 		vkCmdCopyBufferToImage(
-			mVkTemporaryCommandBuffer,
+			mVkUploadCmdBuffer,
 			stagingBuffer,
 			((VKImage2D*)pimg)->mVkImage,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -1113,8 +1076,8 @@ namespace ASGI {
 			stageFlags = GetImageBarrierFlags(VKImageLayoutBarrier::DepthStencilAttachment, imageMemoryBarrier.dstAccessMask, imageMemoryBarrier.newLayout);
 			((VKImage2D*)pimg)->mLayoutBarrier[level] = VKImageLayoutBarrier::PixelDepthStencilRead;
 		}
-		vkCmdPipelineBarrier(
-			mVkTemporaryCommandBuffer,
+		vkCmdPipelineBarrier (
+			mVkUploadCmdBuffer,
 			GetImageBarrierFlags(((VKImage2D*)pimg)->mLayoutBarrier[level], imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
 			stageFlags,
 			0,
@@ -1132,8 +1095,28 @@ namespace ASGI {
 	}
 
 
-	CommandBuffer* VulkanGI::CreateCommandBuffer(const CommandBufferCreateInfo& create_info) {
+	ExcuteQueue* VulkanGI::AcquireExcuteQueue() {
 		return nullptr;
+	}
+
+	void VulkanGI::WaitQueueExcuteFinished(uint32_t numWaiteQueue, ExcuteQueue* excuteQueues) {
+		
+	}
+
+	CommandBuffer* VulkanGI::AcquireCommandBuffer(const CommandBufferCreateInfo& create_info) {
+		return nullptr;
+	}
+
+	bool VulkanGI::ExcuteCommands(ExcuteQueue* excuteQueue, uint32_t numBuffers, CommandBuffer* cmdBuffers, uint32_t numWaiteQueue, ExcuteQueue* waiteQueues) {
+		return false;
+	}
+
+	bool VulkanGI::BeginCommandBuffer(CommandBuffer* cmdBuffer) {
+		return false;
+	}
+
+	bool VulkanGI::EndCommandBuffer(CommandBuffer* cmdBuffer) {
+		return false;
 	}
 
 	void VulkanGI::CmdSetViewport(CommandBuffer& commandBuffer) {
