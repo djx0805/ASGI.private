@@ -64,16 +64,35 @@ namespace ASGI {
 		float    maxDepth;
 	};
 
+	union ClearColorValue {
+		float       float32[4];
+		int32_t     int32[4];
+		uint32_t    uint32[4];
+	};
+
+	struct ClearDepthStencilValue {
+		float       depth;
+		uint32_t    stencil;
+	};
+
+	union ClearValue {
+		ClearColorValue           color;
+		ClearDepthStencilValue    depthStencil;
+	};
+
 	class Buffer : public Resource {
 	public:
-		Buffer(BufferUsageFlags usageFlags) {
+		Buffer(BufferUsageFlags usageFlags, uint64_t size) {
 			mUsageFlags = usageFlags;
+			mSize = size;
 		}
 		virtual ~Buffer() {};
 		//
 		inline BufferUsageFlags GetUsageFlags() { return mUsageFlags; }
+		inline uint64_t GetSize() { return mSize; }
 	protected:
 		BufferUsageFlags mUsageFlags;
+		uint64_t mSize;
 	};
 	typedef ref_ptr<Buffer> buffer_ptr;
 
@@ -138,15 +157,10 @@ namespace ASGI {
 	};
 	typedef ref_ptr<ImageView> image_view_ptr;
 
-
-	class CommandPool : public Resource {
-	public:
-
-	};
-
 	class ExcuteQueue : public Resource {
 	public:
 		virtual ~ExcuteQueue() {}
+		virtual QueueType GetType() = 0;
 	};
 
 	class CommandBuffer : public Resource {
@@ -171,19 +185,63 @@ namespace ASGI {
 	};
 	typedef ref_ptr<ShaderModule> shader_module_ptr;
 
+	class GPUProgram : public Resource {
+	public:
+		virtual ~GPUProgram() {}
+		virtual ShaderModule* GetVertexShader() = 0;
+		virtual ShaderModule* GetGeomteryShader() = 0;
+		virtual ShaderModule* GetTessControlShader() = 0;
+		virtual ShaderModule* GetTessEvaluationShader() = 0;
+		virtual ShaderModule* GetFragmentShader() = 0;
+	};
+	typedef ref_ptr<GPUProgram> gpu_program_ptr;
+
 	class RenderPass : public Resource {
+	public:
 
 	};
 	typedef ref_ptr<RenderPass> render_pass_ptr;
 
 	class GraphicsPipeline : public Resource {
-
+	public:
+		virtual ~GraphicsPipeline() {}
+		virtual GPUProgram* GetGPUProgram() = 0;
 	};
 	typedef ref_ptr<GraphicsPipeline> graphics_pipeline_ptr;
 
 	class Swapchain : public Resource {
 	public:
-		virtual Format GetSurfaceFormat() = 0;
+		virtual Format GetColorFormat() = 0;
+		virtual Format GetDepthStencilFormat() = 0;
+		virtual uint32_t GetNumAttachment() = 0;
+		virtual uint32_t AcquireNextAttachment() = 0;
+		virtual Image2D* GetColorAttachment(uint32_t index) = 0;
+		virtual Image2D* GetDepthStencilAttachment(uint32_t index) = 0;
+		virtual Extent2D GetExtent() = 0;
 	};
 	typedef ref_ptr<Swapchain> swapchain_ptr;
+
+	class ComputePass : public Resource {
+	public:
+		virtual CommandBuffer* GetCmdBuffer() = 0;
+	};
+
+	class ComputePipeline : public Resource {
+	public:
+		virtual ~ComputePipeline() {}
+		//
+		virtual GPUProgram* GetGPUProgram() = 0;
+	};
+
+	class FrameBuffer : public Resource {
+	public:
+		virtual ~FrameBuffer() {}
+		//
+		virtual Extent2D GetExtent() = 0;
+		virtual uint32_t GetNumAttachment() = 0;
+		virtual ImageView* GetAttachment(uint32_t index) = 0;
+		virtual ClearValue GetClearValue(uint32_t index) = 0;
+		virtual void SetClearValue(uint32_t index, ClearValue clearValue) = 0;
+	};
+	typedef ref_ptr<FrameBuffer> frame_buffer_ptr;
 }

@@ -1,4 +1,5 @@
 #include "VulkanDevice.h"
+#include "VulkanResource.h"
 
 namespace ASGI {
 	bool VKLogicDevice::Init(VkPhysicalDevice physicalDevice) {
@@ -34,6 +35,7 @@ namespace ASGI {
 			return false;
 		}
 		//
+		std::vector<float> priorities0(mQueueFamilys[graphics_queue_family_index].queueCount, 1.0);
 		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 		VkDeviceQueueCreateInfo graphics_queue_create_info = {
 			VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -41,21 +43,24 @@ namespace ASGI {
 			0,
 			graphics_queue_family_index,
 			mQueueFamilys[graphics_queue_family_index].queueCount,
-			nullptr
+			priorities0.data()
 		};
 		queueCreateInfos.push_back(graphics_queue_create_info);
 		if (compute_queue_family_index > -1) {
+			std::vector<float> priorities1(mQueueFamilys[compute_queue_family_index].queueCount, 1.0);
 			VkDeviceQueueCreateInfo compute_queue_create_info = {
 				VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 				nullptr,
 				0,
 				compute_queue_family_index,
 				mQueueFamilys[compute_queue_family_index].queueCount,
-				nullptr
+				priorities1.data()
 			};
 			queueCreateInfos.push_back(compute_queue_create_info);
 		}
 		//
+		std::vector<char*> enabledDeviceLayers;
+		enabledDeviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
 		std::vector<char const *> desired_extensions;
 		desired_extensions.push_back("VK_KHR_swapchain");
 		VkPhysicalDeviceFeatures desired_features;
@@ -68,8 +73,8 @@ namespace ASGI {
 			0,
 			queueCreateInfos.size(),
 			&queueCreateInfos[0],
-			0,
-			nullptr,
+			enabledDeviceLayers.size(),
+			enabledDeviceLayers.data(),
 			static_cast<uint32_t>(desired_extensions.size()),
 			desired_extensions.size() > 0 ? &desired_extensions[0] : nullptr,
 			&desired_features
@@ -84,16 +89,17 @@ namespace ASGI {
 			VkQueue queue;
 			vkGetDeviceQueue(mLogicDevice, graphics_queue_family_index, i, &queue);
 			//
-			QueueItm tmp;
-			tmp.familyIndex = graphics_queue_family_index;
-			tmp.queue = queue;
-			tmp.queueFlags = mQueueFamilys[graphics_queue_family_index].queueFlags;
+			VKExcuteQueue* tmp = new VKExcuteQueue();
+			tmp->familyIndex = graphics_queue_family_index;
+			tmp->mQueue = queue;
+			tmp->queueFlags = mQueueFamilys[graphics_queue_family_index].queueFlags;
+			tmp->mType = QueueType::QUEUE_TYPE_GRAPHICS;
 			//
 			VkFenceCreateInfo fenceCreateInfo = {};
 			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fenceCreateInfo.pNext = nullptr;
 			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			if (vkCreateFence(mLogicDevice, &fenceCreateInfo, nullptr, &tmp.signalingFence) != VK_SUCCESS) {
+			if (vkCreateFence(mLogicDevice, &fenceCreateInfo, nullptr, &tmp->signalingFence) != VK_SUCCESS) {
 				continue;
 			}
 			//
@@ -101,26 +107,7 @@ namespace ASGI {
 			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			semaphoreCreateInfo.pNext = nullptr;
 			semaphoreCreateInfo.flags = 0;
-			if (vkCreateSemaphore(mLogicDevice, &semaphoreCreateInfo, nullptr, &tmp.signalingSemaphore) != VK_SUCCESS) {
-				continue;
-			}
-			//
-			VkCommandPoolCreateInfo cmdPoolCreateInfo = {};
-			cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolCreateInfo.pNext = nullptr;
-			cmdPoolCreateInfo.queueFamilyIndex = graphics_queue_family_index;
-			cmdPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			if (vkCreateCommandPool(mLogicDevice, &cmdPoolCreateInfo, nullptr, &tmp.cmdPool) != VK_SUCCESS) {
-				continue;
-			}
-			//
-			VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
-			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdBufferAllocInfo.commandPool = tmp.cmdPool;
-			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			cmdBufferAllocInfo.pNext = nullptr;
-			cmdBufferAllocInfo.commandBufferCount = 1;
-			if (vkAllocateCommandBuffers(mLogicDevice, &cmdBufferAllocInfo, &tmp.primaryCmdBuffer) != VK_SUCCESS) {
+			if (vkCreateSemaphore(mLogicDevice, &semaphoreCreateInfo, nullptr, &tmp->signalingSemaphore) != VK_SUCCESS) {
 				continue;
 			}
 			//
@@ -140,16 +127,16 @@ namespace ASGI {
 			VkQueue queue;
 			vkGetDeviceQueue(mLogicDevice, compute_queue_family_index, i, &queue);
 			//
-			QueueItm tmp;
-			tmp.familyIndex = compute_queue_family_index;
-			tmp.queue = queue;
-			tmp.queueFlags = mQueueFamilys[compute_queue_family_index].queueFlags;
+			VKExcuteQueue* tmp = new VKExcuteQueue();
+			tmp->familyIndex = compute_queue_family_index;
+			tmp->mQueue = queue;
+			tmp->queueFlags = mQueueFamilys[compute_queue_family_index].queueFlags;
 			//
 			VkFenceCreateInfo fenceCreateInfo = {};
 			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fenceCreateInfo.pNext = nullptr;
 			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			if (vkCreateFence(mLogicDevice, &fenceCreateInfo, nullptr, &tmp.signalingFence) != VK_SUCCESS) {
+			if (vkCreateFence(mLogicDevice, &fenceCreateInfo, nullptr, &tmp->signalingFence) != VK_SUCCESS) {
 				continue;
 			}
 			//
@@ -157,27 +144,7 @@ namespace ASGI {
 			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			semaphoreCreateInfo.pNext = nullptr;
 			semaphoreCreateInfo.flags = 0;
-			if (vkCreateSemaphore(mLogicDevice, &semaphoreCreateInfo, nullptr, &tmp.signalingSemaphore) != VK_SUCCESS) {
-				continue;
-			}
-			//
-			//
-			VkCommandPoolCreateInfo cmdPoolCreateInfo = {};
-			cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolCreateInfo.pNext = nullptr;
-			cmdPoolCreateInfo.queueFamilyIndex = compute_queue_family_index;
-			cmdPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			if (vkCreateCommandPool(mLogicDevice, &cmdPoolCreateInfo, nullptr, &tmp.cmdPool) != VK_SUCCESS) {
-				continue;
-			}
-			//
-			VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
-			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdBufferAllocInfo.commandPool = tmp.cmdPool;
-			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			cmdBufferAllocInfo.pNext = nullptr;
-			cmdBufferAllocInfo.commandBufferCount = 1;
-			if (vkAllocateCommandBuffers(mLogicDevice, &cmdBufferAllocInfo, &tmp.primaryCmdBuffer) != VK_SUCCESS) {
+			if (vkCreateSemaphore(mLogicDevice, &semaphoreCreateInfo, nullptr, &tmp->signalingSemaphore) != VK_SUCCESS) {
 				continue;
 			}
 			//
@@ -188,100 +155,70 @@ namespace ASGI {
 			mComputeQueues = mGraphicsQueues;
 		}
 		//
+		mGraphicsQueueFamilyIndex = graphics_queue_family_index;
+		mComputeQueueFamilyIndex = compute_queue_family_index;
+		//
 		return true;
 	}
 
-
-	VkResult VKLogicDevice::ExcuteCmdsOnIdleGraphicsQueue(VkCommandBuffer* cmdBuffers, bool waiteFinished) {
-		auto queue = GetIdleGraphicsQueue();
-		if (queue == nullptr) {
+	VkResult VKLogicDevice::ExcuteCmdOnIdleGraphicsQueue(VkCommandBuffer* cmdBuffer, bool waiteFinished) {
+		auto tmp = GetIdleGraphicsQueue();
+		if (tmp == nullptr) {
 			return VK_NOT_READY;
 		}
-		//
-		auto &tmp = mGraphicsQueues[(long long)queue];
 		//
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = cmdBuffers;
+		submitInfo.pCommandBuffers = cmdBuffer;
 		submitInfo.waitSemaphoreCount = 0;
 		submitInfo.pWaitSemaphores = nullptr;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &tmp.signalingSemaphore;
-		auto res = vkQueueSubmit(queue, 1, &submitInfo, tmp.signalingFence);
+		submitInfo.pSignalSemaphores = &tmp->signalingSemaphore;
+		auto res = vkQueueSubmit(tmp->mQueue, 1, &submitInfo, tmp->signalingFence);
 		if (res != VK_SUCCESS) {
 			return res;
 		}
 		//
 		if (waiteFinished) {
-			res = vkQueueWaitIdle(queue);
+			res = vkQueueWaitIdle(tmp->mQueue);
 		}
 		//
 		return res;
 	}
 
-	VkResult VKLogicDevice::ExcuteCmdsOnIdleGraphicsQueue(std::vector<VkCommandBuffer>& cmdBuffers, bool waiteFinished) {
-		auto queue = GetIdleGraphicsQueue();
-		if (queue == nullptr) {
-			return VK_NOT_READY;
+	VkResult VKLogicDevice::ExcuteCommands(ExcuteQueue* excuteQueue, uint32_t numBuffers, CommandBuffer** cmdBuffers, uint32_t numWaiteQueue, ExcuteQueue** waiteQueues, uint32_t numSwapchain, Swapchain** waiteSwapchains, bool waiteFinished) {
+		std::vector<VkSemaphore> waiteSemaphores(numWaiteQueue + numSwapchain);
+		std::vector<VkPipelineStageFlags> waiteStages(numWaiteQueue + numSwapchain);
+		std::vector<VkCommandBuffer> vkCmdBuffers(numBuffers);
+		//
+		for (int i = 0; i < numWaiteQueue; ++i) {
+			waiteSemaphores[i] = VKExcuteQueue::Cast(waiteQueues[i])->signalingSemaphore;
+			waiteStages[i] = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		}
+		for (int i = 0; i < numSwapchain; ++i) {
+			waiteSemaphores[numWaiteQueue + i] = VKSwapchain::Cast(waiteSwapchains[i])->GetPresentSemaphore();
+			waiteStages[numWaiteQueue + i] = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		}
+		for (int i = 0; i < numBuffers; ++i) {
+			vkCmdBuffers[i] = VKCommandBuffer::Cast(cmdBuffers[i])->GetBindingCmdBuffer();
 		}
 		//
-		auto &tmp = mGraphicsQueues[(long long)queue];
-		//
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.commandBufferCount = cmdBuffers.size();
-		submitInfo.pCommandBuffers = &cmdBuffers[0];
-		submitInfo.waitSemaphoreCount = 0;
-		submitInfo.pWaitSemaphores = nullptr;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &tmp.signalingSemaphore;
-		auto res = vkQueueSubmit(queue, 1, &submitInfo, tmp.signalingFence);
-		if (res != VK_SUCCESS) {
-			return res;
-		}
-		//
-		if (waiteFinished) {
-			res = vkQueueWaitIdle(queue);
-		}
-		//
-		return res;
-	}
-
-	VkResult VKLogicDevice::ExcuteCmdsOnIdleGraphicsQueue(std::vector<VkCommandBuffer>& cmdBuffers, std::vector<VkQueue>& waiteQueues, bool waiteFinished) {
-		auto queue = GetIdleGraphicsQueue();
-		if (queue == nullptr) {
-			return VK_NOT_READY;
-		}
-		//
-		std::vector<VkSemaphore> waiteSemaphores;
-		for (auto &waiteQueue : waiteQueues) {
-			auto itr_graphics = mGraphicsQueues.find((long long)waiteQueue);
-			if (itr_graphics != mGraphicsQueues.end()) {
-				waiteSemaphores.push_back(itr_graphics->second.signalingSemaphore);
-				continue;
-			}
-			//
-			auto itr_compute = mComputeQueues.find((long long)waiteQueue);
-			if (itr_compute != mComputeQueues.end()) {
-				waiteSemaphores.push_back(itr_compute->second.signalingSemaphore);
-			}
-		}
-		//
-		auto &tmp = mGraphicsQueues[(long long)queue];
-		//
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.commandBufferCount = cmdBuffers.size();
-		submitInfo.pCommandBuffers = &cmdBuffers[0];
+		auto tmp = VKExcuteQueue::Cast(excuteQueue);
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr};
+		submitInfo.commandBufferCount = numBuffers;
+		submitInfo.pCommandBuffers = vkCmdBuffers.data();
 		submitInfo.waitSemaphoreCount = waiteSemaphores.size();
-		submitInfo.pWaitSemaphores = submitInfo.waitSemaphoreCount == 0 ? nullptr : &waiteSemaphores[0];
+		submitInfo.pWaitSemaphores = submitInfo.waitSemaphoreCount > 0 ? waiteSemaphores.data() : nullptr;
+		submitInfo.pWaitDstStageMask = submitInfo.waitSemaphoreCount > 0 ? waiteStages.data() : nullptr;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &tmp.signalingSemaphore;
-		auto res = vkQueueSubmit(queue, 1, &submitInfo, tmp.signalingFence);
+		submitInfo.pSignalSemaphores = &tmp->signalingSemaphore;
+		auto res = vkQueueSubmit(tmp->mQueue, 1, &submitInfo, tmp->signalingFence);
 		if (res != VK_SUCCESS) {
 			return res;
 		}
 		//
 		if (waiteFinished) {
-			res = vkQueueWaitIdle(queue);
+			res = vkQueueWaitIdle(tmp->mQueue);
 		}
 		//
 		return res;

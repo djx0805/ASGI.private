@@ -19,9 +19,6 @@
     <Filter Include="ASGI">
       <UniqueIdentifier>{7616917a-9fee-444a-b38c-acef480dae23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="VkGLSL">
-      <UniqueIdentifier>{d70ca4ef-3d8a-4051-85c2-03828d8a563f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="spirv-cross">
       <UniqueIdentifier>{91f65b64-ba42-4c52-857c-2b7dee22ecd4}</UniqueIdentifier>
     </Filter>
@@ -36,9 +33,6 @@
     <ClInclude Include="DynamicGI.h">
       <Filter>ASGI</Filter>
     </ClInclude>
-    <ClInclude Include="GPUResource.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanGI.h">
       <Filter>Vulkan</Filter>
     </ClInclude>
@@ -50,9 +44,6 @@
     </ClInclude>
     <ClInclude Include="ASGI.hpp">
       <Filter>ASGI</Filter>
-    </ClInclude>
-    <ClInclude Include="VkGLSL.hpp">
-      <Filter>VkGLSL</Filter>
     </ClInclude>
     <ClInclude Include="third_lib\SPIRV-Cross\GLSL.std.450.h">
       <Filter>spirv-cross</Filter>
@@ -90,8 +81,26 @@
     <ClInclude Include="Definitions.hpp">
       <Filter>ASGI</Filter>
     </ClInclude>
-    <ClInclude Include="third_lib\VulkanMemoryAllocator-master\src\vk_mem_alloc.h">
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h">
       <Filter>Vulkan\VulkanMemoryAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanMemory.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ref_ptr.h">
+      <Filter>ASGI</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>ASGI</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanCommand.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ICmdBufferTaskQueue.h">
+      <Filter>ASGI</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanDevice.h">
+      <Filter>Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -100,9 +109,6 @@
     </ClCompile>
     <ClCompile Include="ASGI.cpp">
       <Filter>ASGI</Filter>
-    </ClCompile>
-    <ClCompile Include="VkGLSL.cpp">
-      <Filter>VkGLSL</Filter>
     </ClCompile>
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_cfg.cpp">
       <Filter>spirv-cross</Filter>
@@ -127,6 +133,18 @@
     </ClCompile>
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp">
       <Filter>spirv-cross</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanMemory.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanResource.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanCommand.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanDevice.cpp">
+      <Filter>Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

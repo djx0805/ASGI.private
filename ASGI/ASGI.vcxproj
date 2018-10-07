@@ -76,7 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\debug</OutDir>
-    <IncludePath>third_lib;$(IncludePath)</IncludePath>
+    <IncludePath>third_lib;third_lib\stduuid\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -154,6 +154,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DynamicGI.h" />
+    <ClInclude Include="ICmdBufferTaskQueue.h" />
+    <ClInclude Include="ref_ptr.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="third_lib\SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="third_lib\SPIRV-Cross\spirv.hpp" />
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_cfg.hpp" />
@@ -166,12 +169,13 @@
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_msl.hpp" />
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp" />
     <ClInclude Include="Definitions.hpp" />
-    <ClInclude Include="third_lib\VulkanMemoryAllocator-master\src\vk_mem_alloc.h" />
-    <ClInclude Include="VkGLSL.hpp" />
-    <ClInclude Include="GPUResource.h" />
+    <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h" />
     <ClInclude Include="ASGI.h" />
     <ClInclude Include="ASGI.hpp" />
+    <ClInclude Include="VulkanCommand.h" />
+    <ClInclude Include="VulkanDevice.h" />
     <ClInclude Include="VulkanGI.h" />
+    <ClInclude Include="VulkanMemory.h" />
     <ClInclude Include="VulkanResource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -184,8 +188,11 @@
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_hlsl.cpp" />
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_msl.cpp" />
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_reflect.cpp" />
-    <ClCompile Include="VkGLSL.cpp" />
+    <ClCompile Include="VulkanCommand.cpp" />
+    <ClCompile Include="VulkanDevice.cpp" />
     <ClCompile Include="VulkanGI.cpp" />
+    <ClCompile Include="VulkanMemory.cpp" />
+    <ClCompile Include="VulkanResource.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

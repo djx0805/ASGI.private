@@ -150,6 +150,10 @@ namespace ASGI {
 		return pGI->CreateShaderModule(create_info_spirv);
 	}
 
+	gpu_program_ptr CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
+		return pGI->CreateGPUProgram(pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
+	}
+
 	render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info) {
 		return pGI->CreateRenderPass(create_info);
 	}
@@ -160,6 +164,10 @@ namespace ASGI {
 
 	swapchain_ptr CreateSwapchain(const SwapchainCreateInfo& create_info) {
 		return pGI->CreateSwapchain(create_info);
+	}
+
+	frame_buffer_ptr CreateFrameBuffer(RenderPass* targetRenderPass, uint8_t numAttachment, ImageView** attachments, ClearValue* clearValues, uint32_t width, uint32_t height) {
+		return pGI->CreateFrameBuffer(targetRenderPass, numAttachment, attachments, clearValues, width, height);
 	}
 
 	buffer_ptr CreateBuffer(uint64_t size, BufferUsageFlags usageFlags) {
@@ -185,39 +193,79 @@ namespace ASGI {
 	void UnMapBuffer(Buffer* pbuffer) {
 	}
 
-	command_buffer_ptr AcquireCommandBuffer(const CommandBufferCreateInfo& create_info) {
-		return pGI->AcquireCommandBuffer(create_info);
+	void BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
+		pGI->BindUniformBuffer(pProgram, setIndex, bindingIndex, pbuffer, offset, size);
 	}
 
-	void CmdSetViewport(CommandBuffer& commandBuffer) {
-		pGI->CmdSetViewport(commandBuffer);
+	ExcuteQueue* AcquireExcuteQueue(QueueType queueType) {
+		return pGI->AcquireExcuteQueue(queueType);
 	}
 
-	void CmdSetScissor(CommandBuffer& commandBuffer) {
-		return;
+	void WaitQueueExcuteFinished(uint32_t numWaiteQueue, ExcuteQueue** excuteQueues) {
+		pGI->WaitQueueExcuteFinished(numWaiteQueue, excuteQueues);
 	}
 
-	void CmdSetLineWidth(CommandBuffer& commandBuffer) {
-		return;
+	bool SubmitCommands(ExcuteQueue* excuteQueue, uint32_t numBuffers, CommandBuffer** cmdBuffers, uint32_t numWaiteQueue, ExcuteQueue** waiteQueues, uint32_t numSwapchain, Swapchain** waiteSwapchains, bool waiteFinished) {
+		return pGI->SubmitCommands(excuteQueue, numBuffers, cmdBuffers, numWaiteQueue, waiteQueues, numSwapchain, waiteSwapchains, waiteFinished);
 	}
 
-	void CmdBindGraphicsPipeline(CommandBuffer& commandBuffer) {
-
+	void Present(ExcuteQueue* excuteQueue, uint32_t numSwapchain, Swapchain** swapchains, bool waiteFinished) {
+		pGI->Present(excuteQueue, numSwapchain, swapchains, waiteFinished);
 	}
 
-	void CmdBindIndexBuffer(CommandBuffer& commandBuffer) {
-
+	command_buffer_ptr CreateCmdBuffer(){
+		return pGI->CreateCmdBuffer();
 	}
 
-	void CmdBindVertexBuffer(CommandBuffer& commandBuffer) {
 
+	bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) {
+		return pGI->BeginRenderPass(cmdBuffer, renderPass, frameBuffer);
 	}
 
-	void CmdDraw(CommandBuffer& commandBuffer) {
-
+	void EndSubRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
+		pGI->EndSubRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
 	}
 
-	void CmdDrawIndexed(CommandBuffer& commandBuffer) {
+	void EndRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
+		pGI->EndRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
+	}
 
+	bool BeginComputePass(CommandBuffer* cmdBuffer, ComputePass* computePass) {
+		return pGI->BeginComputePass(cmdBuffer, computePass);
+	}
+	void EndComputePass(CommandBuffer* cmdBuffer, ComputePass* computePass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
+		pGI->EndComputePass(cmdBuffer, computePass, numSecondCmdBuffer, secondCmdBuffers);
+	}
+
+	void CmdBindPipeline(CommandBuffer*  cmdBuffer, GraphicsPipeline* pipeline) {
+		pGI->CmdBindPipeline(cmdBuffer, pipeline);
+	}
+
+	void CmdSetViewport(CommandBuffer*  cmdBuffer, uint32_t   firstViewport, uint32_t  viewportCount, Viewport*  pViewports) {
+		pGI->CmdSetViewport(cmdBuffer, firstViewport, viewportCount, pViewports);
+	}
+
+	void CmdSetScissor(CommandBuffer*  cmdBuffer, uint32_t  firstScissor, uint32_t   scissorCount, Rect2D*  pScissors) {
+		pGI->CmdSetScissor(cmdBuffer, firstScissor, scissorCount, pScissors);
+	}
+
+	void CmdSetLineWidth(CommandBuffer*  cmdBuffer, float   lineWidth) {
+		pGI->CmdSetLineWidth(cmdBuffer, lineWidth);
+	}
+
+	void CmdBindIndexBuffer(CommandBuffer* cmdBuffer, Buffer* pBuffer, uint32_t offset, Format indexFormat) {
+		pGI->CmdBindIndexBuffer(cmdBuffer, pBuffer, offset, indexFormat);
+	}
+
+	void CmdBindVertexBuffer(CommandBuffer* cmdBuffer, uint32_t  bindingIndex, Buffer*  pBuffer, uint32_t offset) {
+		pGI->CmdBindVertexBuffer(cmdBuffer, bindingIndex, pBuffer, offset);
+	}
+
+	void CmdDraw(CommandBuffer* cmdBuffer, uint32_t vertexCount, uint32_t  instanceCount, uint32_t firstVertex, uint32_t  firstInstance) {
+		pGI->CmdDraw(cmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void CmdDrawIndexed(CommandBuffer* cmdBuffer, uint32_t indexCount, uint32_t   instanceCount, uint32_t  firstIndex, int32_t  vertexOffset, uint32_t  firstInstance) {
+		pGI->CmdDrawIndexed(cmdBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 }
