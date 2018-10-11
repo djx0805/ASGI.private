@@ -150,8 +150,8 @@ namespace ASGI {
 		return pGI->CreateShaderModule(create_info_spirv);
 	}
 
-	gpu_program_ptr CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
-		return pGI->CreateGPUProgram(pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
+	shader_program_ptr CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
+		return pGI->CreateShaderProgram(pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
 	}
 
 	render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info) {
@@ -193,7 +193,7 @@ namespace ASGI {
 	void UnMapBuffer(Buffer* pbuffer) {
 	}
 
-	void BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
+	void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
 		pGI->BindUniformBuffer(pProgram, setIndex, bindingIndex, pbuffer, offset, size);
 	}
 

@@ -48,7 +48,7 @@ namespace ASGI {
 			0,
 			&application_info,
 			validationLayers.size(),
-			validationLayers.data(),
+			validationLayers.size()>0 ? validationLayers.data() : nullptr,
 			static_cast<uint32_t>(desired_extensions.size()),
 			desired_extensions.size() > 0 ? &desired_extensions[0] : nullptr
 		};
@@ -208,7 +208,7 @@ namespace ASGI {
 		return psm;
 	}
 
-	GPUProgram* VulkanGI::CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
+	ShaderProgram* VulkanGI::CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
 		VKGPUProgram* gpuProgram = new VKGPUProgram(pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
 		if (!gpuProgram->InitDescriptorSet(mLogicDevice.GetDevice())) {
 			return nullptr;
@@ -302,7 +302,7 @@ namespace ASGI {
 	}
 
 	GraphicsPipeline* VulkanGI::CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
-		if (create_info.gpuProgram == nullptr) {
+		if (create_info.shaderProgram == nullptr) {
 			return nullptr;
 		}
 		//
@@ -452,7 +452,7 @@ namespace ASGI {
 		};
 		//
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		auto gpuProgram = VKGPUProgram::Cast(create_info.gpuProgram);
+		auto gpuProgram = VKGPUProgram::Cast(create_info.shaderProgram);
 		if (gpuProgram->mVertexShader != nullptr) {
 			auto shaderModule = VKShaderModule::Cast(gpuProgram->mVertexShader);
 			//
@@ -985,7 +985,7 @@ namespace ASGI {
 	void VulkanGI::UnMapBuffer(Buffer* pbuffer) {
 	}
 
-	void VulkanGI::BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
+	void VulkanGI::BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
 		auto gpuProgram = VKGPUProgram::Cast(pProgram);
 		auto uniformBuffer = VKBuffer::Cast(pbuffer);
 		assert((uniformBuffer->mUsageFlags&BufferUsageFlagBits::BUFFER_USAGE_UNIFORM_BIT) != 0);

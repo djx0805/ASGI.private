@@ -36,10 +36,10 @@ namespace ASGI {
 		std::string mEntryName;
 	};
 
-	class VKGPUProgram : public GPUProgram {
+	class VKGPUProgram : public ShaderProgram {
 		friend class VulkanGI;
 	public:
-		static inline VKGPUProgram* Cast(GPUProgram* gpuProgram) {
+		static inline VKGPUProgram* Cast(ShaderProgram* gpuProgram) {
 			return (VKGPUProgram*)gpuProgram;
 		}
 	public:
@@ -182,7 +182,7 @@ namespace ASGI {
 			return (VKGraphicsPipeline*)ppipeline;
 		}
 	public:
-		inline GPUProgram* GetGPUProgram() override {
+		inline ShaderProgram* GetGPUProgram() override {
 			return mGPUProgram;
 		}
 		//
@@ -196,7 +196,7 @@ namespace ASGI {
 	private:
 		VkPipelineLayout mVkPipelineLayout;
 		VkPipeline mVkPipeLine;
-		gpu_program_ptr mGPUProgram;
+		shader_program_ptr mGPUProgram;
 	};
 
 	class VKComputePipeline : public ComputePipeline {
@@ -206,7 +206,7 @@ namespace ASGI {
 			return (VKComputePipeline*)ppipeline;
 		}
 	public:
-		inline GPUProgram* GetGPUProgram() override {
+		inline ShaderProgram* GetGPUProgram() override {
 			return mGPUProgram;
 		}
 		//
@@ -220,7 +220,7 @@ namespace ASGI {
 	private:
 		VkPipelineLayout mVkPipelineLayout;
 		VkPipeline mVkPipeline;
-		gpu_program_ptr mGPUProgram;
+		shader_program_ptr mGPUProgram;
 	};
 
 	class VKBuffer : public Buffer{

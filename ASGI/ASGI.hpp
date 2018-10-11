@@ -195,7 +195,7 @@ namespace ASGI {
 
 	struct GraphicsPipelineCreateInfo {
 		uint8_t viewportCount;
-		GPUProgram* gpuProgram;
+		ShaderProgram* shaderProgram;
 		PipelineVertexDeclaration vertexDeclaration;
 		PipelineInputAssemblyState inputAssemblyState;
 		PipelineRasterizationState rasterizationState;

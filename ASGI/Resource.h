@@ -185,16 +185,16 @@ namespace ASGI {
 	};
 	typedef ref_ptr<ShaderModule> shader_module_ptr;
 
-	class GPUProgram : public Resource {
+	class ShaderProgram : public Resource {
 	public:
-		virtual ~GPUProgram() {}
+		virtual ~ShaderProgram() {}
 		virtual ShaderModule* GetVertexShader() = 0;
 		virtual ShaderModule* GetGeomteryShader() = 0;
 		virtual ShaderModule* GetTessControlShader() = 0;
 		virtual ShaderModule* GetTessEvaluationShader() = 0;
 		virtual ShaderModule* GetFragmentShader() = 0;
 	};
-	typedef ref_ptr<GPUProgram> gpu_program_ptr;
+	typedef ref_ptr<ShaderProgram> shader_program_ptr;
 
 	class RenderPass : public Resource {
 	public:
@@ -205,7 +205,7 @@ namespace ASGI {
 	class GraphicsPipeline : public Resource {
 	public:
 		virtual ~GraphicsPipeline() {}
-		virtual GPUProgram* GetGPUProgram() = 0;
+		virtual ShaderProgram* GetGPUProgram() = 0;
 	};
 	typedef ref_ptr<GraphicsPipeline> graphics_pipeline_ptr;
 
@@ -230,7 +230,7 @@ namespace ASGI {
 	public:
 		virtual ~ComputePipeline() {}
 		//
-		virtual GPUProgram* GetGPUProgram() = 0;
+		virtual ShaderProgram* GetGPUProgram() = 0;
 	};
 
 	class FrameBuffer : public Resource {

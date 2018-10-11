@@ -11,7 +11,7 @@ namespace ASGI {
 		bool Init(const char* device_name, ICmdBufferTaskQueue* cmdBufferTaskQueue = nullptr) override;
 
 		ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info) override;
-		GPUProgram* CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) override;
+		ShaderProgram* CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) override;
 		RenderPass* CreateRenderPass(const RenderPassCreateInfo& create_info) override;
 		GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) override;
 		Swapchain* CreateSwapchain(const SwapchainCreateInfo& create_info) override;
@@ -26,7 +26,7 @@ namespace ASGI {
 		void UpdateBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext = nullptr) override;
 		void* MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) override;
 		void UnMapBuffer(Buffer* pbuffer) override;
-		void BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) override;
+		void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) override;
 
 		Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) override;
 		ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel) override;

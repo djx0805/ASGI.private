@@ -12,7 +12,7 @@ namespace ASGI {
 		virtual bool Init(const char* device_name = nullptr, ICmdBufferTaskQueue* cmdBufferTaskQueue = nullptr) = 0;
 		//graphics pipeline
 		virtual ShaderModule* CreateShaderModule(const ShaderModuleCreateInfo& create_info) = 0;
-		virtual GPUProgram* CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) = 0;
+		virtual ShaderProgram* CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) = 0;
 
 		virtual RenderPass* CreateRenderPass(const RenderPassCreateInfo& create_info) = 0;
 		virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) = 0;
@@ -29,7 +29,7 @@ namespace ASGI {
 		virtual void* MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE) = 0;
 		virtual void UnMapBuffer(Buffer* pbuffer) = 0;
 
-		virtual void BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) = 0;
+		virtual void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) = 0;
 		//texture resource
 		virtual Image2D* CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) = 0;
 		virtual ImageView* CreateImageView(Image2D* srcImage, uint32_t mipLevel) = 0;

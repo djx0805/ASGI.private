@@ -32,7 +32,7 @@ public:
 		auto pVSModule = ASGI::CreateShaderModule("F:\\VulkanLearn\\Vulkan-master\\data\\shaders\\triangle.vert");
 		auto pFGModule = ASGI::CreateShaderModule("F:\\VulkanLearn\\Vulkan-master\\data\\shaders\\triangle.frag");
 		//
-		pGPUProgram = ASGI::CreateGPUProgram(pVSModule, nullptr, nullptr, nullptr, pFGModule);
+		pGPUProgram = ASGI::CreateShaderProgram(pVSModule, nullptr, nullptr, nullptr, pFGModule);
 		//create render pass
 		std::vector<ASGI::AttachmentDescription> attachments(2);
 		// Color attachment
@@ -57,7 +57,7 @@ public:
 		// Setup attachment references
 		std::vector<ASGI::AttachmentReference> colorReferences(1);																		
 		colorReferences[0].attachment = 0;													// Attachment 0 is color
-		colorReferences[0].layout = ASGI::ImageLayout::IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;				// Attachment layout used as color during the subpass
+		colorReferences[0].layout = ASGI::ImageLayout::IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;				// Attachment layout used as color during the subpass
 		//
 		ASGI::AttachmentReference depthReference;
 		depthReference.attachment = 1;													// Attachment 1 is color
@@ -67,27 +67,8 @@ public:
 		subpassDescriptions[0].colorAttachments = colorReferences;					// Reference to the color attachment in slot 0
 		subpassDescriptions[0].depthStencilAttachment = depthReference;				// Reference to the depth attachment in slot 1
 		//
-		std::vector<ASGI::SubpassDependency> dependencies(2);
-		// First dependency at the start of the renderpass
-		// Does the transition from final to initial layout 
-		dependencies[0].srcSubpass = ASGI::SUBPASS_EXTERNAL;								// Producer of the dependency 
-		dependencies[0].dstSubpass = 0;													// Consumer is our single subpass that will wait for the execution depdendency
-		dependencies[0].srcStageMask = ASGI::PipelineStageFlagBits::PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-		dependencies[0].dstStageMask = ASGI::PipelineStageFlagBits::PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependencies[0].srcAccessMask = ASGI::AccessFlagBits::ACCESS_MEMORY_READ_BIT;
-		dependencies[0].dstAccessMask = ASGI::AccessFlagBits::ACCESS_COLOR_ATTACHMENT_READ_BIT | ASGI::AccessFlagBits::ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		// Second dependency at the end the renderpass
-		// Does the transition from the initial to the final layout
-		dependencies[1].srcSubpass = 0;													// Producer of the dependency is our single subpass
-		dependencies[1].dstSubpass = ASGI::SUBPASS_EXTERNAL;										// Consumer are all commands outside of the renderpass
-		dependencies[1].srcStageMask = ASGI::PipelineStageFlagBits::PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependencies[1].dstStageMask = ASGI::PipelineStageFlagBits::PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-		dependencies[1].srcAccessMask = ASGI::AccessFlagBits::ACCESS_COLOR_ATTACHMENT_READ_BIT | ASGI::AccessFlagBits::ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		dependencies[1].dstAccessMask = ASGI::AccessFlagBits::ACCESS_MEMORY_READ_BIT;
-		//
 		ASGI::RenderPassCreateInfo renderPassCreateInfo;
 		renderPassCreateInfo.attachments = std::move(attachments);
-		renderPassCreateInfo.dependencies = std::move(dependencies);
 		renderPassCreateInfo.subpasses = std::move(subpassDescriptions);
 		pRenderPass = ASGI::CreateRenderPass(renderPassCreateInfo);
 		//create pipeline
@@ -96,7 +77,7 @@ public:
 			0,0,ASGI::VertexFormat::VF_Float3,0});
 		graphics_pipeline_create_info.vertexDeclaration.vertexInputs.push_back({
 			0,3*sizeof(float),ASGI::VertexFormat::VF_Float3,1});
-		graphics_pipeline_create_info.gpuProgram = pGPUProgram;
+		graphics_pipeline_create_info.shaderProgram = pGPUProgram;
 		graphics_pipeline_create_info.colorBlendState.Attachments.push_back(ASGI::PipelineColorBlendAttachmentState());
 		graphics_pipeline_create_info.renderPass = pRenderPass;
 		graphics_pipeline_create_info.subpassIndex = 0;
@@ -213,7 +194,7 @@ private:
 	}
 	private:
 		ASGI::swapchain_ptr pSwapchain = nullptr;
-		ASGI::gpu_program_ptr pGPUProgram = nullptr;
+		ASGI::shader_program_ptr pGPUProgram = nullptr;
 		ASGI::graphics_pipeline_ptr pGraphicsPipeline = nullptr;
 		ASGI::render_pass_ptr pRenderPass;
 		std::vector<ASGI::frame_buffer_ptr> frameBuffers;

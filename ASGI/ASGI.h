@@ -5,7 +5,7 @@ namespace ASGI {
 	ASGI_API bool Init(GIType driver, const char* device_name = nullptr);
 	//
 	ASGI_API shader_module_ptr CreateShaderModule(const char* shaderPath);
-	ASGI_API gpu_program_ptr CreateGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader);
+	ASGI_API shader_program_ptr CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader);
 	ASGI_API render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info);
 	ASGI_API graphics_pipeline_ptr CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info);
 	ASGI_API swapchain_ptr CreateSwapchain(const SwapchainCreateInfo& create_info);
@@ -17,7 +17,7 @@ namespace ASGI {
 	ASGI_API void UpdateBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext = nullptr);
 	ASGI_API void* MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode = MapMode::MAP_MODE_WRITE);
 	ASGI_API void UnMapBuffer(Buffer* pbuffer);
-	ASGI_API void BindUniformBuffer(GPUProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size);
+	ASGI_API void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size);
 	//
 	//ASGI_API Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
 
