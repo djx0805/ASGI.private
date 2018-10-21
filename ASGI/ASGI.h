@@ -2,6 +2,9 @@
 #include "ASGI.hpp"
 
 namespace ASGI {
+	ASGI_API graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo = nullptr, const char* device_name = nullptr);
+	ASGI_API void SetCurrentContext(GraphicsContext* context);
+	//
 	ASGI_API bool Init(GIType driver, const char* device_name = nullptr);
 	//
 	ASGI_API shader_module_ptr CreateShaderModule(const char* shaderPath);
@@ -19,7 +22,23 @@ namespace ASGI {
 	ASGI_API void UnMapBuffer(Buffer* pbuffer);
 	ASGI_API void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size);
 	//
-	//ASGI_API Texture2D* CreateTexture2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
+	ASGI_API image_2d_ptr CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags);
+	ASGI_API image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel);
+	ASGI_API image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel, uint32_t numMipLevels, Format format);
+
+	ASGI_API sampler_ptr CreateSampler(float minLod = 0.0f, float maxLod = 0.0f, float  mipLodBias = 0.0f,
+		Filter magFilter = Filter::FILTER_LINEAR, Filter minFilter = Filter::FILTER_LINEAR,
+		SamplerMipmapMode mipmapMode = SamplerMipmapMode::SAMPLER_MIPMAP_MODE_LINEAR,
+		SamplerAddressMode addressModeU = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		SamplerAddressMode addressModeV = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		SamplerAddressMode addressModeW = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		float  maxAnisotropy = 1.0f, CompareOp compareOp = CompareOp::COMPARE_OP_NEVER,
+		BorderColor borderColor = BorderColor::BORDER_COLOR_INT_OPAQUE_WHITE);
+
+	ASGI_API void BindTexture(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, ImageView* pImgView, Sampler* pSampler);
+	ASGI_API image_update_context_ptr BeginUpdateImage();
+	ASGI_API bool EndUpdateImage(ImageUpdateContext* pUpdateContext);
+	ASGI_API bool UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext = nullptr);
 
 	ASGI_API ExcuteQueue* AcquireExcuteQueue(QueueType queueType);
 	ASGI_API void WaitQueueExcuteFinished(uint32_t numWaiteQueue, ExcuteQueue** excuteQueues);

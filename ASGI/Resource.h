@@ -80,6 +80,14 @@ namespace ASGI {
 		ClearDepthStencilValue    depthStencil;
 	};
 
+	class Swapchain;
+	class GraphicsContext : public Resource {
+	public:
+		virtual ~GraphicsContext() {}
+		virtual Swapchain* GetSwapchain() = 0;
+	};
+	typedef ref_ptr<GraphicsContext> graphics_context_ptr;
+
 	class Buffer : public Resource {
 	public:
 		Buffer(BufferUsageFlags usageFlags, uint64_t size) {
@@ -142,6 +150,12 @@ namespace ASGI {
 		uint32_t mNumMip;
 	};
 	typedef ref_ptr<Image2D> image_2d_ptr;
+
+	class Sampler : public Resource {
+	public:
+		virtual ~Sampler() {}
+	};
+	typedef ref_ptr<Sampler> sampler_ptr;
 
 	class ImageUpdateContext : public Resource {
 	public:

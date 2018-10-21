@@ -1,11 +1,28 @@
 #pragma once
+#include <iostream>
 #include "GraphicWindow.h"
 #include "..\ASGI\ASGI.h"
+
+#include "gli\gli\gli.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "..\glm\glm.hpp"
 #include "..\glm\gtc\matrix_transform.hpp"
+
+#define FREEIMAGE_LIB
+#pragma comment(lib, "jpeg.lib")
+#pragma comment(lib, "mng.lib")
+#pragma comment(lib, "openexr.lib")
+#pragma comment(lib, "openjpeg.lib")
+#pragma comment(lib, "png.lib")
+#pragma comment(lib, "rawlite.lib")
+#pragma comment(lib, "tiff.lib")
+#pragma comment(lib, "zlib.lib")
+#include "FreeImage\FreeImage.h"
+#include "FreeImage\Utilities.h"
+#pragma comment(lib, "freeimage.lib")
+
 
 class GITest : public GraphicWindow {
 public:
@@ -29,8 +46,8 @@ public:
 			return false;
 		}
 		//load shader
-		auto pVSModule = ASGI::CreateShaderModule("F:\\VulkanLearn\\Vulkan-master\\data\\shaders\\triangle.vert");
-		auto pFGModule = ASGI::CreateShaderModule("F:\\VulkanLearn\\Vulkan-master\\data\\shaders\\triangle.frag");
+		auto pVSModule = ASGI::CreateShaderModule("Z:\\ASGI\\debug\\test.vert");
+		auto pFGModule = ASGI::CreateShaderModule("Z:\\ASGI\\debug\\test.frag");
 		//
 		pGPUProgram = ASGI::CreateShaderProgram(pVSModule, nullptr, nullptr, nullptr, pFGModule);
 		//create render pass
@@ -57,7 +74,7 @@ public:
 		// Setup attachment references
 		std::vector<ASGI::AttachmentReference> colorReferences(1);																		
 		colorReferences[0].attachment = 0;													// Attachment 0 is color
-		colorReferences[0].layout = ASGI::ImageLayout::IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;				// Attachment layout used as color during the subpass
+		colorReferences[0].layout = ASGI::ImageLayout::IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;				// Attachment layout used as color during the subpass
 		//
 		ASGI::AttachmentReference depthReference;
 		depthReference.attachment = 1;													// Attachment 1 is color
@@ -76,7 +93,9 @@ public:
 		graphics_pipeline_create_info.vertexDeclaration.vertexInputs.push_back({
 			0,0,ASGI::VertexFormat::VF_Float3,0});
 		graphics_pipeline_create_info.vertexDeclaration.vertexInputs.push_back({
-			0,3*sizeof(float),ASGI::VertexFormat::VF_Float3,1});
+			0,3 * sizeof(float),ASGI::VertexFormat::VF_Float3,1 });
+		graphics_pipeline_create_info.vertexDeclaration.vertexInputs.push_back({
+			0,6 * sizeof(float),ASGI::VertexFormat::VF_Float2, 2 });
 		graphics_pipeline_create_info.shaderProgram = pGPUProgram;
 		graphics_pipeline_create_info.colorBlendState.Attachments.push_back(ASGI::PipelineColorBlendAttachmentState());
 		graphics_pipeline_create_info.renderPass = pRenderPass;
@@ -105,25 +124,27 @@ public:
 		{
 			float position[3];
 			float color[3];
+			float uv[2];
 		};
 
 		// Setup vertices
 		std::vector<Vertex> vertexBuffer =
 		{
-			{ { 1.0f,  1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f } },
-			{ { -1.0f,  1.0f, 0.0f },{ 0.0f, 1.0f, 0.0f } },
-			{ { 0.0f, -1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f } }
+			{ { 1.0f,  1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{1.0,1.0} },
+			{ { -1.0f,  1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{0.0,1.0} },
+			{ { 0.0f, -1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{0.5,0} }
 		};
 		uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
 		// Setup indices
 		std::vector<uint32_t> indexBuffer = { 0, 1, 2 };
 		uint32_t indexBufferSize =3* sizeof(uint32_t);
 		//
+		auto bufferUpdateContex = ASGI::BeginUpdateBuffer();
 		pVertexBuffer = ASGI::CreateBuffer(vertexBufferSize, ASGI::BufferUsageFlagBits::BUFFER_USAGE_VERTEX_BIT | ASGI::BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT);
-		ASGI::UpdateBuffer(pVertexBuffer, 0, vertexBufferSize, vertexBuffer.data());
+		ASGI::UpdateBuffer(pVertexBuffer, 0, vertexBufferSize, vertexBuffer.data(), bufferUpdateContex);
 
 		pIndexBuffer = ASGI::CreateBuffer(indexBufferSize, ASGI::BufferUsageFlagBits::BUFFER_USAGE_INDEX_BIT | ASGI::BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT);
-		ASGI::UpdateBuffer(pIndexBuffer, 0, indexBufferSize, indexBuffer.data());
+		ASGI::UpdateBuffer(pIndexBuffer, 0, indexBufferSize, indexBuffer.data(), bufferUpdateContex);
 
 
 		struct {
@@ -132,11 +153,28 @@ public:
 			glm::mat4 viewMatrix;
 		} uboVS;
 		uboVS.projectionMatrix = glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 256.0f);
-		uboVS.viewMatrix = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.5f));
+		uboVS.viewMatrix = glm::lookAt(glm::vec3(0, 0, -2.5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 		pUniformBuffer = ASGI::CreateBuffer(sizeof(uboVS), ASGI::BufferUsageFlagBits::BUFFER_USAGE_UNIFORM_BIT | ASGI::BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT);
-		ASGI::UpdateBuffer(pUniformBuffer, 0, sizeof(uboVS), &uboVS);
+		ASGI::UpdateBuffer(pUniformBuffer, 0, sizeof(uboVS), &uboVS, bufferUpdateContex);
+		ASGI::EndUpdateBuffer(bufferUpdateContex);
 
 		ASGI::BindUniformBuffer(pGPUProgram, 0, 0, pUniformBuffer, 0, sizeof(uboVS));
+		//
+		FreeImage_Initialise();
+		auto pimg = FreeImage_Load(FREE_IMAGE_FORMAT::FIF_JPEG, "G:\\picture\\girl1.jpg");
+		auto imgWidth = FreeImage_GetWidth(pimg);
+		auto imgHeight = FreeImage_GetHeight(pimg);
+		auto pimg1 = FreeImage_ConvertTo32Bits(pimg);
+		auto redMask = FreeImage_GetRedMask(pimg1);
+		FreeImage_Save(FREE_IMAGE_FORMAT::FIF_PNG, pimg1, "G:\\picture\\girl11.png");
+		auto pdata = FreeImage_GetBits(pimg1);
+		pImage = ASGI::CreateImage2D(imgWidth, imgHeight, ASGI::Format::FORMAT_R8G8B8A8_UNORM, 1,
+			ASGI::SampleCountFlagBits::SAMPLE_COUNT_1_BIT, 
+			ASGI::ImageUsageFlagBits::IMAGE_USAGE_SAMPLED_BIT | ASGI::ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_DST_BIT | ASGI::ImageUsageFlagBits::IMAGE_USAGE_TRANSFER_SRC_BIT);
+		ASGI::UpdateImage2D(pImage, 0, 0, 0, imgWidth, imgHeight, pdata);
+		pSampler = ASGI::CreateSampler();
+		ASGI::BindTexture(pGPUProgram, 0, 1, pImage->GetOrigView(), pSampler);
+		//
 
 		return true;
 	}
@@ -204,4 +242,7 @@ private:
 		ASGI::buffer_ptr pVertexBuffer;
 		ASGI::buffer_ptr pIndexBuffer;
 		ASGI::buffer_ptr pUniformBuffer;
+
+		ASGI::image_2d_ptr pImage;
+		ASGI::sampler_ptr pSampler;
 };

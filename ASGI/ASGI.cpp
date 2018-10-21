@@ -3,6 +3,11 @@
 #include "ASGI.h"
 #include "VkGLSL.hpp"
 #include "VulkanGI.h"
+#include <io.h>
+#include  <stdio.h>
+#include <thread>
+#include <mutex>
+#include <unordered_map>
 
 namespace ASGI {
 	bool GSupportParallelCommandBuffer = false;
@@ -96,6 +101,62 @@ namespace ASGI {
 	}
 
 	DynamicGI* pGI = nullptr;
+	class GraphicsContextManager {
+	public:
+		GraphicsContext* GetCurrentContext(long long threadId) {
+			std::lock_guard<std::mutex> lock(mMutexContext);
+			//
+			std::this_thread::get_id();
+			auto itr_thread = mThreadContexts.find(threadId);
+			if (itr_thread == mThreadContexts.end() || itr_thread->second.size() == 0) {
+				return nullptr;
+			}
+			auto itr_current = mThreadCurrentContext.find(threadId);
+			if (itr_current == mThreadCurrentContext.end()) {
+				return itr_thread->second[0];
+			}
+			else {
+				return itr_thread->second[itr_current->second];
+			}
+		}
+		//
+
+	private:
+		std::unordered_map<long long, std::vector<graphics_context_ptr> > mThreadContexts;
+		std::unordered_map<long long, int> mThreadCurrentContext;
+		std::unordered_map<long long, DynamicGI*> mContextGIs;
+		//
+		std::mutex mMutexContext;
+	};
+
+	graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo, const char* device_name) {
+		if (driver == GIType::GI_VULKAN) {
+			pGI = new VulkanGI();
+			if (pGI && pGI->Init(device_name)) {
+				Swapchain* pSwapchain = nullptr;
+				if (swapchainInfo != nullptr) {
+					pSwapchain = pGI->CreateSwapchain(*swapchainInfo);
+					if (pSwapchain == nullptr) {
+						delete pGI;
+						pGI = nullptr;
+						return nullptr;
+					}
+					//
+					VKContext* pres = new VKContext(pSwapchain);
+					return pres;
+				}
+			}
+			else {
+				return nullptr;
+			}
+		}
+		//
+		return nullptr;
+	}
+
+	void SetCurrentContext(GraphicsContext* context) {
+
+	}
 
 	bool Init(GIType driver, const char* device_name) {
 		if (driver == GIType::GI_VULKAN) {
@@ -111,10 +172,9 @@ namespace ASGI {
 	}
 
 	shader_module_ptr CreateShaderModule(const char* shaderPath) {
-		//VKGLSL::GLSLLayout glslLayout;
-		//if (!VKGLSL::GLSLLayoutAnalyze(create_info.pcode, glslLayout)) {
-		//	return nullptr;
-		//}
+		if (_access(shaderPath, 0) != 0) {
+			return nullptr;
+		}
 		//
 		std::string spirvPath = std::string(shaderPath) + ".spv";
 		std::string spirvCode;
@@ -195,6 +255,45 @@ namespace ASGI {
 
 	void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
 		pGI->BindUniformBuffer(pProgram, setIndex, bindingIndex, pbuffer, offset, size);
+	}
+
+	image_2d_ptr CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
+		return pGI->CreateImage2D(sizeX, sizeY, format, numMips, samples, usageFlags);
+	}
+
+	image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel) {
+		return pGI->CreateImageView(srcImage, mipLevel);
+	}
+
+	image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel, uint32_t numMipLevels, Format format) {
+		return pGI->CreateImageView(srcImage, mipLevel, numMipLevels, format);
+	}
+
+	sampler_ptr CreateSampler(float minLod, float maxLod, float  mipLodBias,
+		Filter magFilter, Filter minFilter,
+		SamplerMipmapMode mipmapMode,
+		SamplerAddressMode addressModeU,
+		SamplerAddressMode addressModeV,
+		SamplerAddressMode addressModeW,
+		float  maxAnisotropy, CompareOp compareOp,
+		BorderColor borderColor) {
+		return pGI->CreateSampler(minLod, maxLod, mipLodBias, magFilter, minFilter, mipmapMode, addressModeU, addressModeV, addressModeW, maxAnisotropy, compareOp, borderColor);
+	}
+
+	void BindTexture(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, ImageView* pImgView, Sampler* pSampler) {
+		pGI->BindTexture(pProgram, setIndex, bindingIndex, pImgView, pSampler);
+	}
+
+	image_update_context_ptr BeginUpdateImage() {
+		return pGI->BeginUpdateImage();
+	}
+
+	bool EndUpdateImage(ImageUpdateContext* pUpdateContext) {
+		return pGI->EndUpdateImage(pUpdateContext);
+	}
+
+	bool UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext) {
+		return pGI->UpdateImage2D(pimg, level, offsetX, offsetY, sizeX, sizeY, pdata, pUpdateContext);
 	}
 
 	ExcuteQueue* AcquireExcuteQueue(QueueType queueType) {

@@ -36,6 +36,17 @@ namespace ASGI {
 		bool EndUpdateImage(ImageUpdateContext* pUpdateContext) override;
 		bool UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext = nullptr) override;
 
+		Sampler* CreateSampler(float minLod = 0.0f, float maxLod = 0.0f, float  mipLodBias = 0.0f,
+			Filter magFilter = Filter::FILTER_LINEAR, Filter minFilter = Filter::FILTER_LINEAR,
+			SamplerMipmapMode mipmapMode = SamplerMipmapMode::SAMPLER_MIPMAP_MODE_LINEAR,
+			SamplerAddressMode addressModeU = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+			SamplerAddressMode addressModeV = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+			SamplerAddressMode addressModeW = SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+			float  maxAnisotropy = 1.0f, CompareOp compareOp = CompareOp::COMPARE_OP_NEVER,
+			BorderColor borderColor = BorderColor::BORDER_COLOR_INT_OPAQUE_WHITE) override;
+
+		void BindTexture(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, ImageView* pImgView, Sampler* pSampler) override;
+
 		ExcuteQueue* AcquireExcuteQueue(QueueType queueType) override;
 		void WaitQueueExcuteFinished(uint32_t numWaiteQueue, ExcuteQueue** excuteQueues) override;
 		bool SubmitCommands(ExcuteQueue* excuteQueue, uint32_t numBuffers, CommandBuffer** cmdBuffers, uint32_t numWaiteQueue, ExcuteQueue** waiteQueues, uint32_t numSwapchain, Swapchain** waiteSwapchains, bool waiteFinished = false) override;

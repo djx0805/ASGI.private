@@ -819,6 +819,7 @@ namespace ASGI {
 			}
 		}
 		//
+		//uint32_t tmp = buffer->mMemory->GetSize();
 		if (pUpdateContext != nullptr) {
 			VKBufferUpdateContext::UpdateItem tmp;
 			tmp.dstBuffer = buffer;
@@ -926,7 +927,7 @@ namespace ASGI {
 	}
 
 	bool VulkanGI::EndUpdateBuffer(BufferUpdateContext* pUpdateContext) {
-		std::vector<std::array<void*, 3> >copys(((VKBufferUpdateContext*)pUpdateContext)->updates.size());
+		std::vector<std::array<void*, 5> >copys(((VKBufferUpdateContext*)pUpdateContext)->updates.size());
 		//
 		int index = 0;
 		for (auto &itm : ((VKBufferUpdateContext*)pUpdateContext)->updates) {
@@ -949,6 +950,8 @@ namespace ASGI {
 			copys[index][0] = itm.dstBuffer;
 			copys[index][1] = stagingBuffer;
 			copys[index][2] = pmemory;
+			copys[index][3] = (void*)itm.offset;
+			copys[index][4] = (void*)itm.size;
 			++index;
 		}
 		//
@@ -959,8 +962,8 @@ namespace ASGI {
 		for (auto & itm : copys) {
 			VkBufferCopy vbCopyRegion = {};
 			vbCopyRegion.srcOffset = 0;
-			vbCopyRegion.dstOffset = ((VKBuffer*)itm[0])->mMemory->GetOffset();
-			vbCopyRegion.size = ((VKBuffer*)itm[0])->mMemory->GetSize();
+			vbCopyRegion.dstOffset = (uint32_t)itm[3];
+			vbCopyRegion.size =(uint32_t)itm[4];
 			vkCmdCopyBuffer(mCmdBufferManger->GetUpLoadCmdBuffer(), (VkBuffer)itm[1], ((VKBuffer*)(itm[0]))->mVkBuffer, 1, &vbCopyRegion);
 		}
 		//
@@ -1216,6 +1219,68 @@ namespace ASGI {
 		//
 		VKMemoryManager::Instance()->DestoryBuffer(stagingBuffer, pmemory);
 		return true;
+	}
+
+	Sampler* VulkanGI::CreateSampler(float minLod, float maxLod, float  mipLodBias,
+		Filter magFilter, Filter minFilter,
+		SamplerMipmapMode mipmapMode,
+		SamplerAddressMode addressModeU,
+		SamplerAddressMode addressModeV,
+		SamplerAddressMode addressModeW,
+		float  maxAnisotropy, CompareOp compareOp,
+		BorderColor borderColor) {
+		VkSamplerCreateInfo samplerCreateInfo = {};
+		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerCreateInfo.pNext = NULL;
+		samplerCreateInfo.minLod = minLod;
+		samplerCreateInfo.maxLod = maxLod;
+		samplerCreateInfo.mipLodBias = mipLodBias;
+		samplerCreateInfo.magFilter = (VkFilter)magFilter;
+		samplerCreateInfo.minFilter = (VkFilter)minFilter;
+		samplerCreateInfo.mipmapMode = (VkSamplerMipmapMode)mipmapMode;
+		samplerCreateInfo.addressModeU = (VkSamplerAddressMode)addressModeU;
+		samplerCreateInfo.addressModeV = (VkSamplerAddressMode)addressModeV;
+		samplerCreateInfo.addressModeW = (VkSamplerAddressMode)addressModeW;
+		samplerCreateInfo.compareOp = (VkCompareOp)compareOp;
+		samplerCreateInfo.borderColor = (VkBorderColor)borderColor;
+		if (maxAnisotropy <= 1.0 || !mVkDeviceFeatures.samplerAnisotropy) {
+			samplerCreateInfo.anisotropyEnable = VK_FALSE;
+			samplerCreateInfo.maxAnisotropy = 1.0;
+		}
+		else {
+			samplerCreateInfo.anisotropyEnable = VK_TRUE;
+			samplerCreateInfo.maxAnisotropy = maxAnisotropy > mVkDeviceProperties.limits.maxSamplerAnisotropy ? mVkDeviceProperties.limits.maxSamplerAnisotropy : maxAnisotropy;
+		}
+
+		VkSampler sampler;
+		if (vkCreateSampler(mLogicDevice.GetDevice(), &samplerCreateInfo, nullptr, &sampler) != VK_SUCCESS) {
+			return nullptr;
+		}
+		//
+		VKSampler* res = new VKSampler();
+		res->mVkSampler = sampler;
+		return res;
+	}
+
+	void VulkanGI::BindTexture(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, ImageView* pImgView, Sampler* pSampler) {
+		auto gpuProgram = VKGPUProgram::Cast(pProgram);
+		auto imageView= VKImageView::Cast(pImgView);
+		//
+		VkDescriptorImageInfo imgInfo;
+		imgInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+		imgInfo.imageView = imageView->mImageView;
+		imgInfo.sampler = VKSampler::Cast(pSampler)->mVkSampler;
+		//
+		VkWriteDescriptorSet writeDescriptorSet = {};
+		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSet.pNext = NULL;
+		writeDescriptorSet.dstSet = gpuProgram->mDescriptorSets[gpuProgram->mIndexSet[setIndex]];
+		writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		writeDescriptorSet.dstBinding = bindingIndex;
+		writeDescriptorSet.pImageInfo = &imgInfo;
+		writeDescriptorSet.descriptorCount = 1;
+		//
+		vkUpdateDescriptorSets(mLogicDevice.GetDevice(), 1, &writeDescriptorSet, 0, NULL);
 	}
 
 	ExcuteQueue* VulkanGI::AcquireExcuteQueue(QueueType queueType) {

@@ -161,6 +161,20 @@ namespace ASGI {
 		uint32_t mCurrentAttachmentIndex;
 	};
 
+	class VKContext : public GraphicsContext {
+		friend class VulkanGI;
+	public:
+		VKContext(Swapchain* pswapchain) {
+			mSwapchain = pswapchain;
+		}
+
+		Swapchain* GetSwapchain() override {
+			return mSwapchain;
+		}
+	private:
+		swapchain_ptr mSwapchain;
+	};
+
 	class VKRenderPass : public RenderPass {
 		friend class VulkanGI;
 	public:
@@ -327,6 +341,17 @@ namespace ASGI {
 		}
 	private:
 		std::vector<VKImageLayoutBarrier> mLayoutBarrier;
+	};
+
+
+	class VKSampler : public Sampler {
+		friend class VulkanGI;
+	public:
+		inline static VKSampler* Cast(Sampler* sampler) {
+			return(VKSampler*)sampler;
+		}
+	private:
+		VkSampler mVkSampler;
 	};
 
 	class VKImageUpdateContext : public ImageUpdateContext {
