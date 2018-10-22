@@ -7,6 +7,7 @@
 #include <mutex>
 #include <condition_variable>
 #include "ASGI.hpp"
+#include "DynamicGI.h"
 
 #ifdef _WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -164,15 +165,30 @@ namespace ASGI {
 	class VKContext : public GraphicsContext {
 		friend class VulkanGI;
 	public:
-		VKContext(Swapchain* pswapchain) {
+		VKContext(Swapchain* pswapchain, DynamicGI* pgi) {
 			mSwapchain = pswapchain;
+			mGI = std::unique_ptr<DynamicGI>(pgi);
 		}
 
 		Swapchain* GetSwapchain() override {
 			return mSwapchain;
 		}
+
+		GIType GetGIType() override {
+			return GIType::GI_VULKAN;
+		}
+
+		const char* GetDeviceName() override{
+			return mDeviceName.c_str();
+		}
+
+		DynamicGI* GetDynamicGI() {
+			return mGI.get();
+		}
 	private:
 		swapchain_ptr mSwapchain;
+		std::unique_ptr<DynamicGI> mGI;
+		std::string mDeviceName;
 	};
 
 	class VKRenderPass : public RenderPass {

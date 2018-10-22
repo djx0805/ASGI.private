@@ -5,8 +5,6 @@ namespace ASGI {
 	ASGI_API graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo = nullptr, const char* device_name = nullptr);
 	ASGI_API void SetCurrentContext(GraphicsContext* context);
 	//
-	ASGI_API bool Init(GIType driver, const char* device_name = nullptr);
-	//
 	ASGI_API shader_module_ptr CreateShaderModule(const char* shaderPath);
 	ASGI_API shader_program_ptr CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader);
 	ASGI_API render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info);
