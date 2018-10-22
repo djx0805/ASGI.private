@@ -154,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DynamicGI.h" />
+    <ClInclude Include="GraphicsContextManager.h" />
     <ClInclude Include="ICmdBufferTaskQueue.h" />
     <ClInclude Include="ref_ptr.h" />
     <ClInclude Include="Resource.h" />

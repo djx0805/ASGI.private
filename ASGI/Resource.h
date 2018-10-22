@@ -90,24 +90,40 @@ namespace ASGI {
 	};
 	typedef ref_ptr<GraphicsContext> graphics_context_ptr;
 
-	class Buffer : public Resource {
+
+	class GraphicsResource : public Resource {
 	public:
-		Buffer(BufferUsageFlags usageFlags, uint64_t size) {
+		virtual GraphicsContext* GetContext() { return mContext; }
+	protected:
+		GraphicsResource(GraphicsContext* pcontext) {
+			mContext = pcontext;
+		}
+		//
+		virtual ~GraphicsResource() {}
+	protected:
+		GraphicsContext* mContext;
+	};
+
+	class Buffer : public GraphicsResource {
+	public:
+		inline BufferUsageFlags GetUsageFlags() { return mUsageFlags; }
+		inline uint64_t GetSize() { return mSize; }
+	protected:
+		Buffer(GraphicsContext* pcontext, BufferUsageFlags usageFlags, uint64_t size) : GraphicsResource(pcontext) {
 			mUsageFlags = usageFlags;
 			mSize = size;
 		}
-		virtual ~Buffer() {};
 		//
-		inline BufferUsageFlags GetUsageFlags() { return mUsageFlags; }
-		inline uint64_t GetSize() { return mSize; }
+		virtual ~Buffer() {};
 	protected:
 		BufferUsageFlags mUsageFlags;
 		uint64_t mSize;
 	};
 	typedef ref_ptr<Buffer> buffer_ptr;
 
-	class BufferUpdateContext : public Resource {
-	public:
+	class BufferUpdateContext : public GraphicsResource {
+	protected:
+		BufferUpdateContext(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
 		virtual ~BufferUpdateContext() {}
 	};
 	typedef ref_ptr<BufferUpdateContext> buffer_update_contex_ptr;
@@ -115,14 +131,8 @@ namespace ASGI {
 
 	class ImageView;
 	class Image2D;
-	class Image : public Resource {
+	class Image : public GraphicsResource {
 	public:
-		Image(Format format) {
-			mFormat = format;
-		}
-
-		virtual ~Image() {}
-		//
 		virtual Image2D* asImage2D() { return nullptr; }
 		virtual ImageView* GetOrigView() = 0;
 		//
@@ -131,101 +141,110 @@ namespace ASGI {
 			return mFormat;
 		}
 	protected:
+		Image(GraphicsContext* pcontext, Format format) : GraphicsResource(pcontext) {
+			mFormat = format;
+		}
+		//
+		virtual ~Image() {}
+	protected:
 		Format mFormat;
 	};
 	typedef ref_ptr<Image> image_ptr;
 
 	class Image2D : public Image {
 	public:
-		Image2D(Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image(format) {
-			mExtent.width = sizeX;
-			mExtent.height = sizeY;
-			mNumMip = numMip;
-		}
 		virtual Image2D* asImage2D() { return this; }
 		//
 	public:
 		inline Extent2D GetSize() { return mExtent; }
 		inline uint32_t GetNumMip() { return mNumMip; }
 	protected:
+		Image2D(GraphicsContext* pcontext, Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image(pcontext, format) {
+			mExtent.width = sizeX;
+			mExtent.height = sizeY;
+			mNumMip = numMip;
+		}
+	protected:
 		Extent2D mExtent;
 		uint32_t mNumMip;
 	};
 	typedef ref_ptr<Image2D> image_2d_ptr;
 
-	class Sampler : public Resource {
-	public:
+	class Sampler : public GraphicsResource {
+	protected:
+		Sampler(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
 		virtual ~Sampler() {}
 	};
 	typedef ref_ptr<Sampler> sampler_ptr;
 
-	class ImageUpdateContext : public Resource {
-	public:
+	class ImageUpdateContext : public GraphicsResource {
+	protected:
+		ImageUpdateContext(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
 		virtual ~ImageUpdateContext() {}
 	};
 	typedef ref_ptr<ImageUpdateContext> image_update_context_ptr;
 
-	class ImageView : public Resource {
+	class ImageView : public GraphicsResource {
 	public:
-		virtual ~ImageView() {}
-		//
 		virtual Image* GetSrcImage() = 0;
+	protected:
+		ImageView(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~ImageView() {}
 	};
 	typedef ref_ptr<ImageView> image_view_ptr;
 
-	class ExcuteQueue : public Resource {
+	class ExcuteQueue : public GraphicsResource {
 	public:
-		virtual ~ExcuteQueue() {}
 		virtual QueueType GetType() = 0;
+	protected:
+		ExcuteQueue(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~ExcuteQueue() {}
 	};
 
-	class CommandBuffer : public Resource {
-	public:
+	class CommandBuffer : public GraphicsResource {
+	protected:
+		CommandBuffer(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
 		virtual ~CommandBuffer() {}
 	};
 	typedef ref_ptr<CommandBuffer> command_buffer_ptr;
 
-	class Semaphore : public Resource {
-	public:
-		virtual ~Semaphore() {}
-	};
-
-	class Fence : public Resource {
-	public:
-		virtual ~Fence() {}
-	};
-
-	class ShaderModule : public Resource {
-	public:
+	class ShaderModule : public GraphicsResource {
+	protected:
+		ShaderModule(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
 		virtual ~ShaderModule() {}
 	};
 	typedef ref_ptr<ShaderModule> shader_module_ptr;
 
-	class ShaderProgram : public Resource {
+	class ShaderProgram : public GraphicsResource {
 	public:
-		virtual ~ShaderProgram() {}
 		virtual ShaderModule* GetVertexShader() = 0;
 		virtual ShaderModule* GetGeomteryShader() = 0;
 		virtual ShaderModule* GetTessControlShader() = 0;
 		virtual ShaderModule* GetTessEvaluationShader() = 0;
 		virtual ShaderModule* GetFragmentShader() = 0;
+	protected:
+		ShaderProgram(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~ShaderProgram() {}
 	};
 	typedef ref_ptr<ShaderProgram> shader_program_ptr;
 
-	class RenderPass : public Resource {
-	public:
-
+	class RenderPass : public GraphicsResource {
+	protected:
+		RenderPass(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~RenderPass() {}
 	};
 	typedef ref_ptr<RenderPass> render_pass_ptr;
 
-	class GraphicsPipeline : public Resource {
+	class GraphicsPipeline : public GraphicsResource {
 	public:
-		virtual ~GraphicsPipeline() {}
 		virtual ShaderProgram* GetGPUProgram() = 0;
+	protected:
+		GraphicsPipeline(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~GraphicsPipeline() {}
 	};
 	typedef ref_ptr<GraphicsPipeline> graphics_pipeline_ptr;
 
-	class Swapchain : public Resource {
+	class Swapchain : public GraphicsResource {
 	public:
 		virtual Format GetColorFormat() = 0;
 		virtual Format GetDepthStencilFormat() = 0;
@@ -234,30 +253,36 @@ namespace ASGI {
 		virtual Image2D* GetColorAttachment(uint32_t index) = 0;
 		virtual Image2D* GetDepthStencilAttachment(uint32_t index) = 0;
 		virtual Extent2D GetExtent() = 0;
+	protected:
+		Swapchain(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~Swapchain() {}
 	};
 	typedef ref_ptr<Swapchain> swapchain_ptr;
 
-	class ComputePass : public Resource {
-	public:
-		virtual CommandBuffer* GetCmdBuffer() = 0;
+	class ComputePass : public GraphicsResource {
+	protected:
+		ComputePass(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~ComputePass() {}
 	};
 
-	class ComputePipeline : public Resource {
+	class ComputePipeline : public GraphicsResource {
 	public:
-		virtual ~ComputePipeline() {}
-		//
 		virtual ShaderProgram* GetGPUProgram() = 0;
+	protected:
+		ComputePipeline(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~ComputePipeline() {}
 	};
 
-	class FrameBuffer : public Resource {
+	class FrameBuffer : public GraphicsResource {
 	public:
-		virtual ~FrameBuffer() {}
-		//
 		virtual Extent2D GetExtent() = 0;
 		virtual uint32_t GetNumAttachment() = 0;
 		virtual ImageView* GetAttachment(uint32_t index) = 0;
 		virtual ClearValue GetClearValue(uint32_t index) = 0;
 		virtual void SetClearValue(uint32_t index, ClearValue clearValue) = 0;
+	protected:
+		FrameBuffer(GraphicsContext* pcontext) : GraphicsResource(pcontext) {}
+		virtual ~FrameBuffer() {}
 	};
 	typedef ref_ptr<FrameBuffer> frame_buffer_ptr;
 }

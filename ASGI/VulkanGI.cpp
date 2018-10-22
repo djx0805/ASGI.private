@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "GraphicsContextManager.h"
+
 namespace ASGI {
 	bool VulkanGI::getInstanceLevelExtensions() {
 		uint32_t extensions_count = 0;
@@ -188,7 +190,7 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		VKShaderModule* psm = new VKShaderModule();
+		VKShaderModule* psm = new VKShaderModule(GraphicsContextManager::Instance()->GetCurrentContext());
 		//
 		VkShaderModuleCreateInfo shader_module_create_info;
 		shader_module_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -209,7 +211,9 @@ namespace ASGI {
 	}
 
 	ShaderProgram* VulkanGI::CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
-		VKGPUProgram* gpuProgram = new VKGPUProgram(pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
+		VKGPUProgram* gpuProgram = new VKGPUProgram(GraphicsContextManager::Instance()->GetCurrentContext(),
+			                                                                               pVertexShader, pGeomteryShader, pTessControlShader, pTessEvaluationShader, pFragmentShader);
+		//
 		if (!gpuProgram->InitDescriptorSet(mLogicDevice.GetDevice())) {
 			return nullptr;
 		}
@@ -296,7 +300,7 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		auto pres = new VKRenderPass();
+		auto pres = new VKRenderPass(GraphicsContextManager::Instance()->GetCurrentContext());
 		pres->mVkRenderPass = renderPass;
 		return pres;
 	}
@@ -540,7 +544,7 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		auto pres = new VKGraphicsPipeline();
+		auto pres = new VKGraphicsPipeline(GraphicsContextManager::Instance()->GetCurrentContext());
 		pres->mVkPipeLine = graphicsPipeline;
 		pres->mVkPipelineLayout = pipelineLayout;
 		pres->mGPUProgram = gpuProgram;
@@ -550,7 +554,7 @@ namespace ASGI {
 
 	Swapchain* VulkanGI::CreateSwapchain(const SwapchainCreateInfo& create_info) {
 		if (mSwapchain == nullptr) {
-			mSwapchain = new  VKSwapchain(mLogicDevice.GetDevice());
+			mSwapchain = new  VKSwapchain(GraphicsContextManager::Instance()->GetCurrentContext(), mLogicDevice.GetDevice());
 		}
 		//
 		VkResult result;
@@ -697,7 +701,7 @@ namespace ASGI {
 		mSwapchain->mColorAttachments.resize(imageCount);
 		for (uint32_t i = 0; i < imageCount; i++)
 		{
-			mSwapchain->mColorAttachments[i] = new VKImage2D((Format)swapchain_create_info.imageFormat, swapchainExtent.width, swapchainExtent.height, 1);
+			mSwapchain->mColorAttachments[i] = new VKImage2D(GraphicsContextManager::Instance()->GetCurrentContext(), (Format)swapchain_create_info.imageFormat, swapchainExtent.width, swapchainExtent.height, 1);
 			mSwapchain->mColorAttachments[i]->mVkImage = swapchainImgs[i];
 			mSwapchain->mColorAttachments[i]->mUsageFlag = swapchain_create_info.imageUsage;
 			//
@@ -724,7 +728,7 @@ namespace ASGI {
 			if (vkCreateImageView(mLogicDevice.GetDevice(), &colorAttachmentView, nullptr, &imgView) != VK_SUCCESS) {
 				return nullptr;
 			}
-			VKImageView* pview = new VKImageView(mSwapchain->mColorAttachments[i], imgView, colorAttachmentView);
+			VKImageView* pview = new VKImageView(GraphicsContextManager::Instance()->GetCurrentContext(), mSwapchain->mColorAttachments[i], imgView, colorAttachmentView);
 			mSwapchain->mColorAttachments[i]->mOrgiView = pview;
 			//create depth stencil attachment
 			if (create_info.preferredDepthStencilFormat == 0) {
@@ -757,7 +761,7 @@ namespace ASGI {
 		frameBufferCreateInfo.height = height;
 		frameBufferCreateInfo.layers = 1;
 		//
-		VKFrameBuffer* res = new VKFrameBuffer();
+		VKFrameBuffer* res = new VKFrameBuffer(GraphicsContextManager::Instance()->GetCurrentContext());
 		if (vkCreateFramebuffer(mLogicDevice.GetDevice(), &frameBufferCreateInfo, nullptr, &res->mFrameBuffer) != VK_SUCCESS) {
 			return nullptr;
 		}
@@ -886,7 +890,7 @@ namespace ASGI {
 	}
 
 	Buffer* VulkanGI::CreateBuffer(uint64_t size, BufferUsageFlags usageFlags) {
-		auto pres = new  VKBuffer(usageFlags, size);
+		auto pres = new  VKBuffer(GraphicsContextManager::Instance()->GetCurrentContext(), usageFlags, size);
 		VkBufferUsageFlags bufferUsageFlags = 0;
 		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_SRC_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		if (usageFlags & BufferUsageFlagBits::BUFFER_USAGE_TRANSFER_DST_BIT) bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -923,7 +927,7 @@ namespace ASGI {
 	}
 
 	BufferUpdateContext* VulkanGI::BeginUpdateBuffer() {
-		return new VKBufferUpdateContext();
+		return new VKBufferUpdateContext(GraphicsContextManager::Instance()->GetCurrentContext());
 	}
 
 	bool VulkanGI::EndUpdateBuffer(BufferUpdateContext* pUpdateContext) {
@@ -1091,11 +1095,11 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		auto pres = new VKImage2D(format, sizeX, sizeY, numMips);
+		auto pres = new VKImage2D(GraphicsContextManager::Instance()->GetCurrentContext(), format, sizeX, sizeY, numMips);
 		pres->mVkImage = vkImage;
 		pres->mMemory = pmemory;
 		pres->mUsageFlag = usageFlags;
-		pres->mOrgiView = new VKImageView(pres, imageView, imageViewInfo);
+		pres->mOrgiView = new VKImageView(GraphicsContextManager::Instance()->GetCurrentContext(), pres, imageView, imageViewInfo);
 		//
 		return pres;
 	}
@@ -1110,7 +1114,7 @@ namespace ASGI {
 
 
 	ImageUpdateContext* VulkanGI::BeginUpdateImage() {
-		return new VKImageUpdateContext();
+		return new VKImageUpdateContext(GraphicsContextManager::Instance()->GetCurrentContext());
 	}
 
 	bool VulkanGI::EndUpdateImage(ImageUpdateContext* pUpdateContext) {
@@ -1257,7 +1261,7 @@ namespace ASGI {
 			return nullptr;
 		}
 		//
-		VKSampler* res = new VKSampler();
+		VKSampler* res = new VKSampler(GraphicsContextManager::Instance()->GetCurrentContext());
 		res->mVkSampler = sampler;
 		return res;
 	}
@@ -1345,7 +1349,7 @@ namespace ASGI {
 	}
 
 	CommandBuffer* VulkanGI::CreateCmdBuffer() {
-		return new VKCommandBuffer();
+		return new VKCommandBuffer(GraphicsContextManager::Instance()->GetCurrentContext());
 	}
 
 	bool VulkanGI::BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) {

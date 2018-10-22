@@ -25,25 +25,22 @@
     <Filter Include="Vulkan\VulkanMemoryAllocator">
       <UniqueIdentifier>{7b3911e5-6bf8-4c34-aca5-d77c2503f7b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ASGI\private">
+      <UniqueIdentifier>{9739bd35-0be6-406d-ac2b-66d4e9553353}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASGI\public">
+      <UniqueIdentifier>{7ba653df-ff9f-4eb7-82a0-fee7e0188230}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DynamicGI.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanGI.h">
       <Filter>Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="VulkanResource.h">
       <Filter>Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="ASGI.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
-    <ClInclude Include="ASGI.hpp">
-      <Filter>ASGI</Filter>
     </ClInclude>
     <ClInclude Include="third_lib\SPIRV-Cross\GLSL.std.450.h">
       <Filter>spirv-cross</Filter>
@@ -78,37 +75,46 @@
     <ClInclude Include="third_lib\SPIRV-Cross\spirv_reflect.hpp">
       <Filter>spirv-cross</Filter>
     </ClInclude>
-    <ClInclude Include="Definitions.hpp">
-      <Filter>ASGI</Filter>
-    </ClInclude>
     <ClInclude Include="third_lib\VulkanMemoryAllocator\src\vk_mem_alloc.h">
       <Filter>Vulkan\VulkanMemoryAllocator</Filter>
     </ClInclude>
     <ClInclude Include="VulkanMemory.h">
       <Filter>Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="ref_ptr.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanCommand.h">
       <Filter>Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="ICmdBufferTaskQueue.h">
-      <Filter>ASGI</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanDevice.h">
       <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ASGI.h">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="ASGI.hpp">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions.hpp">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="ICmdBufferTaskQueue.h">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="ref_ptr.h">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>ASGI\public</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicGI.h">
+      <Filter>ASGI\private</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsContextManager.h">
+      <Filter>ASGI\private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanGI.cpp">
       <Filter>Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="ASGI.cpp">
-      <Filter>ASGI</Filter>
     </ClCompile>
     <ClCompile Include="third_lib\SPIRV-Cross\spirv_cfg.cpp">
       <Filter>spirv-cross</Filter>
@@ -145,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="VulkanDevice.cpp">
       <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="ASGI.cpp">
+      <Filter>ASGI\private</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

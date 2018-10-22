@@ -28,6 +28,8 @@ namespace ASGI {
 			return (VKShaderModule*)pmodule;
 		}
 	public:
+		VKShaderModule(GraphicsContext* pcontext) : ShaderModule(pcontext) {}
+		//
 		inline const char* const GetEntryName() {
 			return mEntryName.c_str();
 		}
@@ -44,7 +46,7 @@ namespace ASGI {
 			return (VKGPUProgram*)gpuProgram;
 		}
 	public:
-		VKGPUProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) {
+		VKGPUProgram(GraphicsContext* pcontext, ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader) : ShaderProgram(pcontext) {
 			mVertexShader = pVertexShader;
 			mGeomteryShader = pGeomteryShader;
 			mTessControlShader = pTessControlShader;
@@ -95,7 +97,7 @@ namespace ASGI {
 			return (VKSwapchain*)pchain;
 		}
 	public:
-		VKSwapchain(VkDevice logicDevice) {
+		VKSwapchain(GraphicsContext* pcontext, VkDevice logicDevice) : Swapchain(pcontext) {
 			mLogicDevice = logicDevice;
 			//
 			VkSemaphoreCreateInfo semaphoreCreateInfo = {};
@@ -198,6 +200,8 @@ namespace ASGI {
 			return (VKRenderPass*)ppass;
 		}
 	public:
+		VKRenderPass(GraphicsContext* pcontext) : RenderPass(pcontext) {}
+		//
 		inline VkRenderPass GetRenderPass() {
 			return mVkRenderPass;
 		}
@@ -212,6 +216,8 @@ namespace ASGI {
 			return (VKGraphicsPipeline*)ppipeline;
 		}
 	public:
+		VKGraphicsPipeline(GraphicsContext* pcontext) : GraphicsPipeline(pcontext) {}
+		//
 		inline ShaderProgram* GetGPUProgram() override {
 			return mGPUProgram;
 		}
@@ -236,6 +242,8 @@ namespace ASGI {
 			return (VKComputePipeline*)ppipeline;
 		}
 	public:
+		VKComputePipeline(GraphicsContext* pcontext) : ComputePipeline(pcontext) {}
+		//
 		inline ShaderProgram* GetGPUProgram() override {
 			return mGPUProgram;
 		}
@@ -260,17 +268,18 @@ namespace ASGI {
 			return (VKBuffer*)pbuf;
 		}
 	public:
-		~VKBuffer() {
-			VKMemoryManager::Instance()->DestoryBuffer(mVkBuffer, mMemory);
+		VKBuffer(GraphicsContext* pcontext, BufferUsageFlags usageFlags, uint64_t size) : Buffer(pcontext, usageFlags, size) {
+			mMemory = nullptr;
 		}
 
 		inline VkBuffer GetVKBuffer() {
 			return mVkBuffer;
 		}
 	protected:
-		VKBuffer(BufferUsageFlags usageFlags, uint64_t size) : Buffer(usageFlags, size) {
-			mMemory = nullptr;
+		~VKBuffer() {
+			VKMemoryManager::Instance()->DestoryBuffer(mVkBuffer, mMemory);
 		}
+		
 	protected:
 		VkBuffer mVkBuffer;
 		VKMemory* mMemory;
@@ -289,6 +298,8 @@ namespace ASGI {
 			uint32_t size;
 			void* pdata;
 		};
+	public:
+		VKBufferUpdateContext(GraphicsContext* pcontext) : BufferUpdateContext(pcontext) {}
 	private:
 		std::list<UpdateItem> updates;
 	};
@@ -320,20 +331,20 @@ namespace ASGI {
 			return (VKImageView*)pview;
 		}
 	public:
-		VKImageView(Image* pimg, VkImageView pview, VkImageViewCreateInfo viewInfo) {
+		VKImageView(GraphicsContext* pcontext, Image* pimg, VkImageView pview, VkImageViewCreateInfo viewInfo) : ImageView(pcontext) {
 			mSrcImage = pimg;
 			mImageView = pview;
 			mViewInfo = viewInfo;
-		}
-
-		~VKImageView() {
-			VKMemoryManager::Instance()->DestoryImageView(mImageView);
 		}
 
 		Image* GetSrcImage() override {
 			if (mSrcImage->asImage2D() != nullptr) {
 				return (Image*)mSrcImage->asImage2D();
 			}
+		}
+	protected:
+		~VKImageView() {
+			VKMemoryManager::Instance()->DestoryImageView(mImageView);
 		}
 	private:
 		image_ptr mSrcImage;
@@ -348,7 +359,7 @@ namespace ASGI {
 			return (VKImage2D*)pimg;
 		}
 	public:
-		VKImage2D(Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image2D(format, sizeX, sizeY, numMip) {
+		VKImage2D(GraphicsContext* pcontext, Format format, uint32_t sizeX, uint32_t sizeY, uint32_t numMip) : Image2D(pcontext, format, sizeX, sizeY, numMip) {
 			mLayoutBarrier.resize(numMip, VKImageLayoutBarrier::Undefined);
 		}
 		//
@@ -366,6 +377,8 @@ namespace ASGI {
 		inline static VKSampler* Cast(Sampler* sampler) {
 			return(VKSampler*)sampler;
 		}
+	public:
+		VKSampler(GraphicsContext* pcontext) : Sampler(pcontext) {}
 	private:
 		VkSampler mVkSampler;
 	};
@@ -376,6 +389,8 @@ namespace ASGI {
 		inline static VKImageUpdateContext* Cast(ImageUpdateContext* pcontext) {
 			return (VKImageUpdateContext*)pcontext;
 		}
+	public :
+		VKImageUpdateContext(GraphicsContext* pcontext): ImageUpdateContext(pcontext) {}
 	private:
 
 	};
@@ -407,8 +422,8 @@ namespace ASGI {
 			mClearValue[index] = clearValue;
 		}
 	public:
-		VKFrameBuffer() {}
-		VKFrameBuffer(VkFramebuffer frameBuffer, Extent2D extent) {
+		VKFrameBuffer(GraphicsContext* pcontext) : FrameBuffer(pcontext) {}
+		VKFrameBuffer(GraphicsContext* pcontext, VkFramebuffer frameBuffer, Extent2D extent) : FrameBuffer(pcontext) {
 			mFrameBuffer = frameBuffer;
 			mExtent = extent;
 		}

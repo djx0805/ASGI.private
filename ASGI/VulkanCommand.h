@@ -192,7 +192,7 @@ namespace ASGI {
 	public:
 		int mUnExcuteSecondCmdBufferCount = 0;
 		//
-		VKCommandBuffer() {
+		VKCommandBuffer(GraphicsContext* pcontext) : CommandBuffer(pcontext) {
 			mBindingCmdBuffer = nullptr;
 			mUnExcuteSecondCmdBufferCount = 0;
 			mCmdBufferLevel = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;

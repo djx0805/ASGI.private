@@ -1,5 +1,6 @@
 #include "VulkanDevice.h"
 #include "VulkanResource.h"
+#include "GraphicsContextManager.h"
 
 namespace ASGI {
 	bool VKLogicDevice::Init(VkPhysicalDevice physicalDevice) {
@@ -89,7 +90,7 @@ namespace ASGI {
 			VkQueue queue;
 			vkGetDeviceQueue(mLogicDevice, graphics_queue_family_index, i, &queue);
 			//
-			VKExcuteQueue* tmp = new VKExcuteQueue();
+			VKExcuteQueue* tmp = new VKExcuteQueue(GraphicsContextManager::Instance()->GetCurrentContext());
 			tmp->familyIndex = graphics_queue_family_index;
 			tmp->mQueue = queue;
 			tmp->queueFlags = mQueueFamilys[graphics_queue_family_index].queueFlags;
@@ -127,7 +128,7 @@ namespace ASGI {
 			VkQueue queue;
 			vkGetDeviceQueue(mLogicDevice, compute_queue_family_index, i, &queue);
 			//
-			VKExcuteQueue* tmp = new VKExcuteQueue();
+			VKExcuteQueue* tmp = new VKExcuteQueue(GraphicsContextManager::Instance()->GetCurrentContext());
 			tmp->familyIndex = compute_queue_family_index;
 			tmp->mQueue = queue;
 			tmp->queueFlags = mQueueFamilys[compute_queue_family_index].queueFlags;

@@ -12,6 +12,8 @@ namespace ASGI {
 			return (VKExcuteQueue*)excuteQueue;
 		}
 	public:
+		VKExcuteQueue(GraphicsContext* pcontext) : ExcuteQueue(pcontext) {}
+		//
 		inline QueueType GetType() override {
 			return mType;
 		}

@@ -5,10 +5,7 @@
 #include "VulkanGI.h"
 #include <io.h>
 #include  <stdio.h>
-#include <thread>
-#include <sstream>
-#include <mutex>
-#include <unordered_map>
+#include "GraphicsContextManager.h"
 
 namespace ASGI {
 	bool GSupportParallelCommandBuffer = false;
@@ -101,75 +98,25 @@ namespace ASGI {
 		}
 	}
 
-	class GraphicsContextManager {
-	public:
-		static GraphicsContextManager* Instance() {
-			static auto graphicsContextManager = std::unique_ptr<GraphicsContextManager>(new GraphicsContextManager());
-			return graphicsContextManager.get();
-		}
-	public:
-		inline GraphicsContext* GetCurrentContext() {
-			auto strThreadId = getThreadId();
-			//
-			std::lock_guard<std::mutex> lock(mMutexContext);
-			//
-			auto itr_thread = mThreadContexts.find(strThreadId);
-			if (itr_thread == mThreadContexts.end() || itr_thread->second.size() == 0) {
-				return nullptr;
-			}
-			auto itr_current = mThreadCurrentContext.find(strThreadId);
-			if (itr_current == mThreadCurrentContext.end()) {
-				return itr_thread->second[0];
-			}
-			else {
-				return itr_thread->second[itr_current->second];
-			}
-		}
+	DynamicGI* GraphicsContextManager::GetDynamicGI() {
+		auto pcontext = GetCurrentContext();
 		//
-		inline void AddContext(graphics_context_ptr pcontext) {
-			auto strThreadId = getThreadId();
-			//
-			std::lock_guard<std::mutex> lock(mMutexContext);
-			//
-			mThreadContexts[strThreadId].push_back(pcontext);
+		if (pcontext->GetGIType() == GIType::GI_VULKAN) {
+			return ((VKContext*)pcontext)->GetDynamicGI();
 		}
-		//
-		inline void SetCurrentContext(GraphicsContext* pcontext) {
-			auto strThreadId = getThreadId();
-			//
-			std::lock_guard<std::mutex> lock(mMutexContext);
-			//
-			auto &contexts = mThreadContexts[strThreadId];
-			for (int i = 0; i < contexts.size(); ++i) {
-				if (contexts[i].get() == pcontext) {
-					mThreadCurrentContext[strThreadId] = i;
-					return;
-				}
-			}
+		else {
+			return nullptr;
 		}
-		//
-		inline DynamicGI* GetDynamicGI() {
-			auto pcontext = GetCurrentContext();
-			//
-			if (pcontext->GetGIType() == GIType::GI_VULKAN) {
-				return ((VKContext*)pcontext)->GetDynamicGI();
-			}
-			else {
-				return nullptr;
-			}
+	}
+	//
+	inline DynamicGI* GetDynamicGI(GraphicsContext* pcontext) {
+		if (pcontext->GetGIType() == GIType::GI_VULKAN) {
+			return ((VKContext*)pcontext)->GetDynamicGI();
 		}
-	private:
-		inline std::string getThreadId() {
-			std::stringstream ss;
-			std::this_thread::get_id()._To_text(ss);
-			return  ss.str();
+		else {
+			return nullptr;
 		}
-	private:
-		std::unordered_map<std::string, std::vector<graphics_context_ptr> > mThreadContexts;
-		std::unordered_map<std::string, int> mThreadCurrentContext;
-		//
-		std::mutex mMutexContext;
-	};
+	}
 
 	graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo, const char* device_name) {
 		if (driver == GIType::GI_VULKAN) {
@@ -275,7 +222,7 @@ namespace ASGI {
 	}
 
 	void UpdateBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, void* pdata, BufferUpdateContext* pUpdateContext) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->UpdateBuffer(pbuffer, offset, size, pdata, pUpdateContext);
+		GetDynamicGI(pbuffer->GetContext())->UpdateBuffer(pbuffer, offset, size, pdata, pUpdateContext);
 	}
 
 	void* MapBuffer(Buffer* pbuffer, uint32_t offset, uint32_t size, MapMode mapMode) {
@@ -286,7 +233,7 @@ namespace ASGI {
 	}
 
 	void BindUniformBuffer(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, Buffer* pbuffer, uint32_t offset, uint32_t size) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->BindUniformBuffer(pProgram, setIndex, bindingIndex, pbuffer, offset, size);
+		GetDynamicGI(pProgram->GetContext())->BindUniformBuffer(pProgram, setIndex, bindingIndex, pbuffer, offset, size);
 	}
 
 	image_2d_ptr CreateImage2D(uint32_t sizeX, uint32_t sizeY, Format format, uint32_t numMips, SampleCountFlagBits samples, ImageUsageFlags usageFlags) {
@@ -294,11 +241,11 @@ namespace ASGI {
 	}
 
 	image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateImageView(srcImage, mipLevel);
+		return GetDynamicGI(srcImage->GetContext())->CreateImageView(srcImage, mipLevel);
 	}
 
 	image_view_ptr CreateImageView(Image2D* srcImage, uint32_t mipLevel, uint32_t numMipLevels, Format format) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateImageView(srcImage, mipLevel, numMipLevels, format);
+		return GetDynamicGI(srcImage->GetContext())->CreateImageView(srcImage, mipLevel, numMipLevels, format);
 	}
 
 	sampler_ptr CreateSampler(float minLod, float maxLod, float  mipLodBias,
@@ -313,7 +260,7 @@ namespace ASGI {
 	}
 
 	void BindTexture(ShaderProgram* pProgram, uint8_t setIndex, uint32_t bindingIndex, ImageView* pImgView, Sampler* pSampler) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->BindTexture(pProgram, setIndex, bindingIndex, pImgView, pSampler);
+		GetDynamicGI(pProgram->GetContext())->BindTexture(pProgram, setIndex, bindingIndex, pImgView, pSampler);
 	}
 
 	image_update_context_ptr BeginUpdateImage() {
@@ -321,11 +268,11 @@ namespace ASGI {
 	}
 
 	bool EndUpdateImage(ImageUpdateContext* pUpdateContext) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->EndUpdateImage(pUpdateContext);
+		return GetDynamicGI(pUpdateContext->GetContext())->EndUpdateImage(pUpdateContext);
 	}
 
 	bool UpdateImage2D(Image2D* pimg, uint32_t level, uint32_t offsetX, uint32_t offsetY, uint32_t sizeX, uint32_t sizeY, void* pdata, ImageUpdateContext* pUpdateContext) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->UpdateImage2D(pimg, level, offsetX, offsetY, sizeX, sizeY, pdata, pUpdateContext);
+		return GetDynamicGI(pimg->GetContext())->UpdateImage2D(pimg, level, offsetX, offsetY, sizeX, sizeY, pdata, pUpdateContext);
 	}
 
 	ExcuteQueue* AcquireExcuteQueue(QueueType queueType) {
@@ -337,66 +284,66 @@ namespace ASGI {
 	}
 
 	bool SubmitCommands(ExcuteQueue* excuteQueue, uint32_t numBuffers, CommandBuffer** cmdBuffers, uint32_t numWaiteQueue, ExcuteQueue** waiteQueues, uint32_t numSwapchain, Swapchain** waiteSwapchains, bool waiteFinished) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->SubmitCommands(excuteQueue, numBuffers, cmdBuffers, numWaiteQueue, waiteQueues, numSwapchain, waiteSwapchains, waiteFinished);
+		return GetDynamicGI(excuteQueue->GetContext())->SubmitCommands(excuteQueue, numBuffers, cmdBuffers, numWaiteQueue, waiteQueues, numSwapchain, waiteSwapchains, waiteFinished);
 	}
 
 	void Present(ExcuteQueue* excuteQueue, uint32_t numSwapchain, Swapchain** swapchains, bool waiteFinished) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->Present(excuteQueue, numSwapchain, swapchains, waiteFinished);
+		GetDynamicGI(excuteQueue->GetContext())->Present(excuteQueue, numSwapchain, swapchains, waiteFinished);
 	}
 
-	command_buffer_ptr CreateCmdBuffer(){
+	command_buffer_ptr CreateCmdBuffer() {
 		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateCmdBuffer();
 	}
 
 
 	bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->BeginRenderPass(cmdBuffer, renderPass, frameBuffer);
+		return GetDynamicGI(cmdBuffer->GetContext())->BeginRenderPass(cmdBuffer, renderPass, frameBuffer);
 	}
 
 	void EndSubRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->EndSubRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
+		GetDynamicGI(cmdBuffer->GetContext())->EndSubRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
 	}
 
 	void EndRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->EndRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
+		GetDynamicGI(cmdBuffer->GetContext())->EndRenderPass(cmdBuffer, renderPass, numSecondCmdBuffer, secondCmdBuffers);
 	}
 
 	bool BeginComputePass(CommandBuffer* cmdBuffer, ComputePass* computePass) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->BeginComputePass(cmdBuffer, computePass);
+		return GetDynamicGI(cmdBuffer->GetContext())->BeginComputePass(cmdBuffer, computePass);
 	}
 	void EndComputePass(CommandBuffer* cmdBuffer, ComputePass* computePass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->EndComputePass(cmdBuffer, computePass, numSecondCmdBuffer, secondCmdBuffers);
+		GetDynamicGI(cmdBuffer->GetContext())->EndComputePass(cmdBuffer, computePass, numSecondCmdBuffer, secondCmdBuffers);
 	}
 
 	void CmdBindPipeline(CommandBuffer*  cmdBuffer, GraphicsPipeline* pipeline) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdBindPipeline(cmdBuffer, pipeline);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdBindPipeline(cmdBuffer, pipeline);
 	}
 
 	void CmdSetViewport(CommandBuffer*  cmdBuffer, uint32_t   firstViewport, uint32_t  viewportCount, Viewport*  pViewports) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdSetViewport(cmdBuffer, firstViewport, viewportCount, pViewports);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdSetViewport(cmdBuffer, firstViewport, viewportCount, pViewports);
 	}
 
 	void CmdSetScissor(CommandBuffer*  cmdBuffer, uint32_t  firstScissor, uint32_t   scissorCount, Rect2D*  pScissors) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdSetScissor(cmdBuffer, firstScissor, scissorCount, pScissors);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdSetScissor(cmdBuffer, firstScissor, scissorCount, pScissors);
 	}
 
 	void CmdSetLineWidth(CommandBuffer*  cmdBuffer, float   lineWidth) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdSetLineWidth(cmdBuffer, lineWidth);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdSetLineWidth(cmdBuffer, lineWidth);
 	}
 
 	void CmdBindIndexBuffer(CommandBuffer* cmdBuffer, Buffer* pBuffer, uint32_t offset, Format indexFormat) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdBindIndexBuffer(cmdBuffer, pBuffer, offset, indexFormat);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdBindIndexBuffer(cmdBuffer, pBuffer, offset, indexFormat);
 	}
 
 	void CmdBindVertexBuffer(CommandBuffer* cmdBuffer, uint32_t  bindingIndex, Buffer*  pBuffer, uint32_t offset) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdBindVertexBuffer(cmdBuffer, bindingIndex, pBuffer, offset);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdBindVertexBuffer(cmdBuffer, bindingIndex, pBuffer, offset);
 	}
 
 	void CmdDraw(CommandBuffer* cmdBuffer, uint32_t vertexCount, uint32_t  instanceCount, uint32_t firstVertex, uint32_t  firstInstance) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdDraw(cmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdDraw(cmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 	}
 
 	void CmdDrawIndexed(CommandBuffer* cmdBuffer, uint32_t indexCount, uint32_t   instanceCount, uint32_t  firstIndex, int32_t  vertexOffset, uint32_t  firstInstance) {
-		GraphicsContextManager::Instance()->GetDynamicGI()->CmdDrawIndexed(cmdBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+		GetDynamicGI(cmdBuffer->GetContext())->CmdDrawIndexed(cmdBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 }
