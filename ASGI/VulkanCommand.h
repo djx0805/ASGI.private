@@ -222,6 +222,20 @@ namespace ASGI {
 			mLastCmd = mHead;
 		}
 
+		inline void Clear() {
+			mSecondCmdBuffers.clear();
+			//
+			auto pcmd = mHead->pnext;
+			mHead->pnext = nullptr;
+			mLastCmd = mHead;
+			//
+			while (pcmd != nullptr) {
+				auto tmp = pcmd;
+				pcmd = tmp->pnext;
+				delete tmp;
+			}
+		}
+
 		VkResult Excute();
 	private:
 		VKCommand* mHead;
@@ -234,6 +248,25 @@ namespace ASGI {
 	};
 
 	//
+	class VKCmdBeginCmdBuffer : public VKCommand {
+		void excute(CommandBuffer* cmdBuffer) override {
+			auto tmp = VKCommandBuffer::Cast(cmdBuffer);
+			//
+			VkCommandBufferBeginInfo cmd_buffer_begin_info = {};
+			cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			cmd_buffer_begin_info.pNext = nullptr;
+			vkBeginCommandBuffer(tmp->GetBindingCmdBuffer(), &cmd_buffer_begin_info);
+		}
+	};
+
+	class VKCmdEndCmdBuffer : public VKCommand {
+		void excute(CommandBuffer* cmdBuffer) override {
+			auto tmp = VKCommandBuffer::Cast(cmdBuffer);
+			//
+			vkEndCommandBuffer(tmp->GetBindingCmdBuffer());
+		}
+	};
+
 	class VKCmdBeginRenderPass : public VKCommand {
 	public:
 		VKCmdBeginRenderPass(RenderPass* renderPass, FrameBuffer* frameBuffer) {
@@ -258,7 +291,6 @@ namespace ASGI {
 			auto tmp = VKCommandBuffer::Cast(cmdBuffer);
 			//
 			vkCmdEndRenderPass(tmp->GetBindingCmdBuffer());
-			vkEndCommandBuffer(tmp->GetBindingCmdBuffer());
 		}
 	};
 
@@ -289,30 +321,32 @@ namespace ASGI {
 	public:
 		VKCmdSetViewport(uint32_t   firstViewport, uint32_t  viewportCount, Viewport*  viewports) {
 			mFirstViewport = firstViewport;
-			mViewportCount = viewportCount;
-			mViewports = viewports;
+			mViewports.resize(viewportCount);
+			for (int i = 0; i < viewportCount; ++i) {
+				mViewports[i] = viewports[i];
+			}
 		}
 
 		void excute(CommandBuffer* cmdBuffer) override;
 	private:
 		uint32_t mFirstViewport;
-		uint32_t mViewportCount;
-		Viewport* mViewports;
+		std::vector<Viewport> mViewports;
 	};
 
 	class VKCmdSetScissor : public VKCommand {
 	public:
 		VKCmdSetScissor(uint32_t firstScissor, uint32_t scissorCount, Rect2D* scissors) {
 			mFirstScissor = firstScissor;
-			mScissorCount = scissorCount;
-			mScissors = scissors;
+			mScissors.resize(scissorCount);
+			for (int i = 0; i < scissorCount; ++i) {
+				mScissors[i] = scissors[i];
+			}
 		}
 		//
 		void excute(CommandBuffer* cmdBuffer) override;
 	private:
 		uint32_t mFirstScissor;
-		uint32_t mScissorCount;
-		Rect2D* mScissors;
+		std::vector<Rect2D> mScissors;
 	};
 
 	class VKCmdSetLineWidth : public VKCommand {

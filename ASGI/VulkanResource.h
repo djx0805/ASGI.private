@@ -167,7 +167,11 @@ namespace ASGI {
 	class VKContext : public GraphicsContext {
 		friend class VulkanGI;
 	public:
-		VKContext(Swapchain* pswapchain, DynamicGI* pgi) {
+		VKContext() {
+
+		}
+
+		void Set(Swapchain* pswapchain, DynamicGI* pgi) {
 			mSwapchain = pswapchain;
 			mGI = std::unique_ptr<DynamicGI>(pgi);
 		}

@@ -4,11 +4,6 @@
 namespace ASGI {
 	void VKCmdBeginRenderPass::excute(CommandBuffer* cmdBuffer) {
 		auto tmp = VKCommandBuffer::Cast(cmdBuffer);
-
-		VkCommandBufferBeginInfo cmd_buffer_begin_info = {};
-		cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_buffer_begin_info.pNext = nullptr;
-		vkBeginCommandBuffer(tmp->GetBindingCmdBuffer(), &cmd_buffer_begin_info);
 		//
 		auto vkFrameBuffer = VKFrameBuffer::Cast(mFrameBuffer);
 		std::vector<VkClearValue> clearValues(vkFrameBuffer->GetNumAttachment());
@@ -53,8 +48,9 @@ namespace ASGI {
 	}
 
 	void VKCmdSetViewport::excute(CommandBuffer* cmdBuffer) {
-		std::vector<VkViewport> viewports(mViewportCount);
-		for (int i = 0; i < mViewportCount; ++i) {
+		auto viewportCount = mViewports.size();
+		std::vector<VkViewport> viewports(viewportCount);
+		for (int i = 0; i < viewportCount; ++i) {
 			viewports[i].x = mViewports[i].x;
 			viewports[i].y = mViewports[i].y;
 			viewports[i].width = mViewports[i].width;
@@ -63,19 +59,20 @@ namespace ASGI {
 			viewports[i].maxDepth = mViewports[i].maxDepth;
 		}
 
-		vkCmdSetViewport(VKCommandBuffer::Cast(cmdBuffer)->GetBindingCmdBuffer(), mFirstViewport, mViewportCount, viewports.data());
+		vkCmdSetViewport(VKCommandBuffer::Cast(cmdBuffer)->GetBindingCmdBuffer(), mFirstViewport, viewportCount, viewports.data());
 	}
 
 	void VKCmdSetScissor::excute(CommandBuffer* cmdBuffer) {
-		std::vector<VkRect2D> scissors(mScissorCount);
-		for (int i = 0; i < mScissorCount; ++i) {
+		auto scissorCount = mScissors.size();
+		std::vector<VkRect2D> scissors(scissorCount);
+		for (int i = 0; i < scissorCount; ++i) {
 			scissors[i].extent.width = mScissors[i].extent.width;
 			scissors[i].extent.height = mScissors[i].extent.height;
 			scissors[i].offset.x = mScissors[i].offset.x;
 			scissors[i].offset.y = mScissors[i].offset.y;
 		}
 		//
-		vkCmdSetScissor(VKCommandBuffer::Cast(cmdBuffer)->GetBindingCmdBuffer(), mFirstScissor, mScissorCount, scissors.data());
+		vkCmdSetScissor(VKCommandBuffer::Cast(cmdBuffer)->GetBindingCmdBuffer(), mFirstScissor, scissorCount, scissors.data());
 	}
 
 	void VKCmdSetLineWidth::excute(CommandBuffer* cmdBuffer) {

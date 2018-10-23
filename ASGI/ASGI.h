@@ -9,7 +9,6 @@ namespace ASGI {
 	ASGI_API shader_program_ptr CreateShaderProgram(ShaderModule* pVertexShader, ShaderModule* pGeomteryShader, ShaderModule* pTessControlShader, ShaderModule* pTessEvaluationShader, ShaderModule* pFragmentShader);
 	ASGI_API render_pass_ptr CreateRenderPass(const RenderPassCreateInfo& create_info);
 	ASGI_API graphics_pipeline_ptr CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info);
-	ASGI_API swapchain_ptr CreateSwapchain(const SwapchainCreateInfo& create_info);
 	ASGI_API frame_buffer_ptr CreateFrameBuffer(RenderPass* targetRenderPass, uint8_t numAttachment, ImageView** attachments, ClearValue* clearValues, uint32_t width, uint32_t height);
 	//
 	ASGI_API buffer_ptr CreateBuffer(uint64_t size, BufferUsageFlags usageFlags);
@@ -44,6 +43,8 @@ namespace ASGI {
 	ASGI_API void Present(ExcuteQueue* excuteQueue, uint32_t numSwapchain, Swapchain** swapchains, bool waiteFinished = false);
 
 	ASGI_API command_buffer_ptr CreateCmdBuffer();
+	ASGI_API void BeginCmdBuffer(CommandBuffer* cmdBuffer);
+	ASGI_API void EndCmdBuffer(CommandBuffer* cmdBuffer);
 	ASGI_API bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer);
 	ASGI_API void EndSubRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers);
 	ASGI_API void EndRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers);

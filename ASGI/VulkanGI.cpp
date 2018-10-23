@@ -1209,7 +1209,7 @@ namespace ASGI {
 		}
 		vkCmdPipelineBarrier (
 			mCmdBufferManger->GetUpLoadCmdBuffer(),
-			GetImageBarrierFlags(((VKImage2D*)pimg)->mLayoutBarrier[level], imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
+			GetImageBarrierFlags(VKImageLayoutBarrier::TransferDest, imageMemoryBarrier.srcAccessMask, imageMemoryBarrier.oldLayout),
 			stageFlags,
 			0,
 			0, nullptr,
@@ -1439,6 +1439,4 @@ namespace ASGI {
 			mCmdBufferTaskQueue->PushTask(CmdBufferTask(cmdBuffer, secondCmdBuffers[i], VKCommandBuffer::ExcuteParallel));
 		}
 	}
-
-	
 }

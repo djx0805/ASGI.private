@@ -56,6 +56,8 @@ namespace ASGI {
 		virtual void Present(ExcuteQueue* excuteQueue, uint32_t numSwapchain, Swapchain** swapchains, bool waiteFinished = false) = 0;
 		//
 		virtual CommandBuffer* CreateCmdBuffer() = 0;
+		virtual void BeginCmdBuffer(CommandBuffer* cmdBuffer) = 0;
+		virtual void EndCmdBuffer(CommandBuffer* cmdBuffer) = 0;
 		virtual bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) = 0;
 		virtual void EndSubRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) = 0;
 		virtual void EndRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) = 0;

@@ -27,10 +27,6 @@
 class GITest : public GraphicWindow {
 public:
 	bool PrepareRender() override {
-		//
-		if (!ASGI::Init(ASGI::GIType::GI_VULKAN, "GeForce GTX 850M")) {
-			return false;
-		}
 
 		ASGI::SwapchainCreateInfo swapchain_create_info = {
 			GetHWND(),
@@ -39,12 +35,15 @@ public:
 			false,
 			ASGI::Format::FORMAT_B8G8R8A8_UNORM,
 			ASGI::Format::FORMAT_D24_UNORM_S8_UINT,
-			true
+			false
 		};
-		pSwapchain = ASGI::CreateSwapchain(swapchain_create_info);
-		if (pSwapchain == nullptr) {
+
+		pGraphicsContext = ASGI::CreateContext(ASGI::GIType::GI_VULKAN, &swapchain_create_info, "GeForce GTX 850M");
+		if (pGraphicsContext == nullptr) {
 			return false;
 		}
+		pSwapchain = pGraphicsContext->GetSwapchain();
+		//
 		//load shader
 		auto pVSModule = ASGI::CreateShaderModule("Z:\\ASGI\\debug\\test.vert");
 		auto pFGModule = ASGI::CreateShaderModule("Z:\\ASGI\\debug\\test.frag");
@@ -118,8 +117,6 @@ public:
 			frameBuffers.push_back(pFrameBuffer);
 		}
 		//
-		pCmdBuffer = ASGI::CreateCmdBuffer();
-		//
 		struct Vertex
 		{
 			float position[3];
@@ -175,14 +172,47 @@ public:
 		pSampler = ASGI::CreateSampler();
 		ASGI::BindTexture(pGPUProgram, 0, 1, pImage->GetOrigView(), pSampler);
 		//
+		int attachmentCount = pSwapchain->GetNumAttachment();
+		for (int i = 0; i < attachmentCount; ++i) {
+			auto pCmdBuffer = ASGI::CreateCmdBuffer();
+			//
+			ASGI::BeginCmdBuffer(pCmdBuffer);
+			ASGI::BeginRenderPass(pCmdBuffer, pRenderPass, frameBuffers[i]);
+			// Update dynamic viewport state
+			ASGI::Viewport viewport = {};
+			viewport.height = (float)height;
+			viewport.width = (float)width;
+			viewport.minDepth = (float) 0.0f;
+			viewport.maxDepth = (float) 1.0f;
+			ASGI::CmdSetViewport(pCmdBuffer, 0, 1, &viewport);
 
+			// Update dynamic scissor state
+			ASGI::Rect2D scissor = {};
+			scissor.extent.width = width;
+			scissor.extent.height = height;
+			scissor.offset.x = 0;
+			scissor.offset.y = 0;
+			ASGI::CmdSetScissor(pCmdBuffer, 0, 1, &scissor);
+
+			ASGI::CmdBindPipeline(pCmdBuffer, pGraphicsPipeline);
+			ASGI::CmdBindVertexBuffer(pCmdBuffer, 0, pVertexBuffer, 0);
+			ASGI::CmdBindIndexBuffer(pCmdBuffer, pIndexBuffer, 0, ASGI::Format::FORMAT_R32_UINT);
+			ASGI::CmdDrawIndexed(pCmdBuffer, 3, 1, 0, 0, 1);
+			//
+			ASGI::EndRenderPass(pCmdBuffer, pRenderPass, 0, nullptr);
+			ASGI::EndCmdBuffer(pCmdBuffer);
+			//
+			cmdBuffers.push_back(pCmdBuffer);
+		}
 		return true;
 	}
 
 	void Render() override {
 		auto attachmentIndex = pSwapchain->AcquireNextAttachment();
-		ASGI::BeginRenderPass(pCmdBuffer, pRenderPass, frameBuffers[attachmentIndex]);
+		auto pCmdBuffer = cmdBuffers[attachmentIndex];
 		//
+		ASGI::BeginCmdBuffer(pCmdBuffer);
+		ASGI::BeginRenderPass(pCmdBuffer, pRenderPass, frameBuffers[attachmentIndex]);
 		// Update dynamic viewport state
 		ASGI::Viewport viewport = {};
 		viewport.height = (float)height;
@@ -205,8 +235,10 @@ public:
 		ASGI::CmdDrawIndexed(pCmdBuffer, 3, 1, 0, 0, 1);
 		//
 		ASGI::EndRenderPass(pCmdBuffer, pRenderPass, 0, nullptr);
+		ASGI::EndCmdBuffer(pCmdBuffer);
+		//
 		auto cmdBuffer = pCmdBuffer.get();
-		auto swapChain = pSwapchain.get();
+		auto swapChain = pSwapchain;
 		//
 		pqueue = ASGI::AcquireExcuteQueue(ASGI::QueueType::QUEUE_TYPE_GRAPHICS);
 		ASGI::SubmitCommands(pqueue, 1, &cmdBuffer, 0, nullptr, 1, &swapChain);
@@ -231,12 +263,14 @@ private:
 		return std::string(buffer.data(), buffer.size());
 	}
 	private:
-		ASGI::swapchain_ptr pSwapchain = nullptr;
+		ASGI::graphics_context_ptr pGraphicsContext = nullptr;
+		ASGI::Swapchain* pSwapchain = nullptr;
 		ASGI::shader_program_ptr pGPUProgram = nullptr;
 		ASGI::graphics_pipeline_ptr pGraphicsPipeline = nullptr;
 		ASGI::render_pass_ptr pRenderPass;
 		std::vector<ASGI::frame_buffer_ptr> frameBuffers;
-		ASGI::command_buffer_ptr pCmdBuffer;
+		//ASGI::command_buffer_ptr pCmdBuffer;
+		std::vector<ASGI::command_buffer_ptr> cmdBuffers;
 		ASGI::ExcuteQueue* pqueue;
 
 		ASGI::buffer_ptr pVertexBuffer;

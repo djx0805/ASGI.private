@@ -125,7 +125,10 @@ namespace ASGI {
 	graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo, const char* device_name) {
 		if (driver == GIType::GI_VULKAN) {
 			auto pGI = new VulkanGI();
-			if (pGI && pGI->Init(device_name)) {
+			auto pContext = new VKContext();
+			GraphicsContextManager::Instance()->AddContext(pContext);
+			//
+			if (pGI->Init(device_name)) {
 				Swapchain* pSwapchain = nullptr;
 				if (swapchainInfo != nullptr) {
 					pSwapchain = pGI->CreateSwapchain(*swapchainInfo);
@@ -135,14 +138,13 @@ namespace ASGI {
 						return nullptr;
 					}
 					//
-					VKContext* pres = new VKContext(pSwapchain, pGI);
+					pContext->Set(pSwapchain, pGI);
 					//
-					GraphicsContextManager::Instance()->AddContext(pres);
-					//
-					return pres;
+					return pContext;
 				}
 			}
 			else {
+				GraphicsContextManager::Instance()->RemoveContext(pContext);
 				return nullptr;
 			}
 		}
@@ -203,10 +205,6 @@ namespace ASGI {
 
 	graphics_pipeline_ptr CreateGraphicsPipeline(const GraphicsPipelineCreateInfo& create_info) {
 		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateGraphicsPipeline(create_info);
-	}
-
-	swapchain_ptr CreateSwapchain(const SwapchainCreateInfo& create_info) {
-		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateSwapchain(create_info);
 	}
 
 	frame_buffer_ptr CreateFrameBuffer(RenderPass* targetRenderPass, uint8_t numAttachment, ImageView** attachments, ClearValue* clearValues, uint32_t width, uint32_t height) {
@@ -299,6 +297,13 @@ namespace ASGI {
 		return GraphicsContextManager::Instance()->GetDynamicGI()->CreateCmdBuffer();
 	}
 
+	void BeginCmdBuffer(CommandBuffer* cmdBuffer) {
+		return GetDynamicGI(cmdBuffer->GetContext())->BeginCmdBuffer(cmdBuffer);
+	}
+
+	void EndCmdBuffer(CommandBuffer* cmdBuffer) {
+		return GetDynamicGI(cmdBuffer->GetContext())->EndCmdBuffer(cmdBuffer);
+	}
 
 	bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) {
 		return GetDynamicGI(cmdBuffer->GetContext())->BeginRenderPass(cmdBuffer, renderPass, frameBuffer);

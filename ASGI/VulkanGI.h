@@ -53,6 +53,13 @@ namespace ASGI {
 		void Present(ExcuteQueue* excuteQueue, uint32_t numSwapchain, Swapchain** swapchains, bool waiteFinished = false) override;
 
 		CommandBuffer* CreateCmdBuffer() override;
+		void BeginCmdBuffer(CommandBuffer* cmdBuffer) override {
+			VKCommandBuffer::Cast(cmdBuffer)->Clear();
+			VKCommandBuffer::Cast(cmdBuffer)->PushCommand(new VKCmdBeginCmdBuffer());
+		}
+		void EndCmdBuffer(CommandBuffer* cmdBuffer) override {
+			VKCommandBuffer::Cast(cmdBuffer)->PushCommand(new VKCmdEndCmdBuffer());
+		}
 		bool BeginRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, FrameBuffer* frameBuffer) override;
 		void EndSubRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) override;
 		void EndRenderPass(CommandBuffer* cmdBuffer, RenderPass* renderPass, uint32_t numSecondCmdBuffer, CommandBuffer** secondCmdBuffers) override;
