@@ -3,6 +3,9 @@
 #include "third_lib\SPIRV-Cross\spirv_cross.hpp"
 
 namespace ASGI {
+	VKShaderModule::VKShaderModule(GraphicsContext* pcontext) : ShaderModule(pcontext) {
+	}
+	//
 	void VKCommandBuffer::ExcuteParallel(CommandBuffer* pCmdBuffer, CommandBuffer* pSecondCmdBuffer) {
 		auto tmp = VKCommandBuffer::Cast(pCmdBuffer);
 		//excute

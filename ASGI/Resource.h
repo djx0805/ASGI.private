@@ -83,10 +83,11 @@ namespace ASGI {
 	class Swapchain;
 	class GraphicsContext : public Resource {
 	public:
-		virtual ~GraphicsContext() {}
 		virtual Swapchain* GetSwapchain() = 0;
 		virtual GIType GetGIType() = 0;
 		virtual const char* GetDeviceName() = 0;
+	protected:
+		virtual ~GraphicsContext();
 	};
 	typedef ref_ptr<GraphicsContext> graphics_context_ptr;
 

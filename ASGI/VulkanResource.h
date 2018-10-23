@@ -28,7 +28,7 @@ namespace ASGI {
 			return (VKShaderModule*)pmodule;
 		}
 	public:
-		VKShaderModule(GraphicsContext* pcontext) : ShaderModule(pcontext) {}
+		VKShaderModule(GraphicsContext* pcontext);
 		//
 		inline const char* const GetEntryName() {
 			return mEntryName.c_str();

@@ -40,6 +40,22 @@ namespace ASGI{
 			mThreadCurrentContext[std::this_thread::get_id()] = pcontext;
 		}
 		//
+		void RemoveContext(GraphicsContext* pcontext) {
+			std::lock_guard<std::mutex> lock(mMutexContext);
+			//
+			auto &contexts = mThreadContexts[std::this_thread::get_id()];
+			auto itr = std::find(contexts.begin(), contexts.end(), pcontext);
+			if (itr == contexts.end()) {
+				return;
+			}
+			//
+			if (mThreadCurrentContext[std::this_thread::get_id()] == pcontext) {
+				mThreadCurrentContext[std::this_thread::get_id()] = nullptr;
+			}
+			//
+			contexts.erase(itr);
+		}
+		//
 		DynamicGI* GetDynamicGI();
 	private:
 		std::unordered_map<std::thread::id, std::vector<GraphicsContext*> > mThreadContexts;

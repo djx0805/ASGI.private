@@ -118,6 +118,10 @@ namespace ASGI {
 		}
 	}
 
+	GraphicsContext::~GraphicsContext() {
+		GraphicsContextManager::Instance()->RemoveContext(this);
+	}
+
 	graphics_context_ptr CreateContext(GIType driver, SwapchainCreateInfo* swapchainInfo, const char* device_name) {
 		if (driver == GIType::GI_VULKAN) {
 			auto pGI = new VulkanGI();
@@ -147,7 +151,7 @@ namespace ASGI {
 	}
 
 	void SetCurrentContext(GraphicsContext* context) {
-
+		GraphicsContextManager::Instance()->SetCurrentContext(context);
 	}
 
 	shader_module_ptr CreateShaderModule(const char* shaderPath) {
